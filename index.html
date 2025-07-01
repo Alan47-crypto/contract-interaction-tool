@@ -141,7 +141,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        window.onload = () => {
             // --- DOM Element References ---
             const connectButton = document.getElementById('connectButton');
             const sendTxButton = document.getElementById('sendTxButton');
@@ -412,7 +412,7 @@
                 window.ethereum.on('accountsChanged', () => connectWallet());
                 window.ethereum.on('chainChanged', () => connectWallet());
             }
-        });
+        };
     </script>
 </body>
 </html>
