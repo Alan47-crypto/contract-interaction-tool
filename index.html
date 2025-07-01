@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Ethers.js for blockchain interaction from Cloudflare CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <!-- Flashbots provider -->
+    <script src="https://unpkg.com/@flashbots/ethers-provider-bundle@latest/dist/ethers-provider-bundle.umd.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,6 +24,14 @@
         .status-dot-pulse {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+        /* Styling for the toggle switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4f46e5;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4f46e5;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 flex flex-col items-center min-h-screen p-4 md:p-8">
@@ -29,7 +39,7 @@
     <div class="w-full max-w-2xl mx-auto">
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-white">Direct Contract Interaction</h1>
-            <p class="text-gray-400 mt-2">With Gas Estimation and ERC20 Token support.</p>
+            <p class="text-gray-400 mt-2">With Flashbots, Gas Estimation, and ERC20 Token support.</p>
         </header>
 
         <!-- Main Application -->
@@ -104,6 +114,18 @@
             <!-- Step 3: Transaction -->
             <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <h2 class="text-xl font-semibold text-white">Step 3: Build & Send Transaction</h2>
+                
+                 <!-- Flashbots Toggle -->
+                <div class="flex items-center justify-between mt-4 bg-gray-900/50 p-3 rounded-lg">
+                    <div>
+                        <h3 class="font-semibold text-white">Use Flashbots Protection</h3>
+                        <p class="text-sm text-gray-400">Sends transaction privately to avoid front-running. (Ethereum Mainnet only)</p>
+                    </div>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="flashbotsToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="flashbotsToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-700 cursor-pointer"></label>
+                    </div>
+                </div>
                 
                 <!-- Payment Method -->
                 <div class="mt-4">
@@ -188,6 +210,7 @@
             const gasEstimateResult = document.getElementById('gasEstimateResult');
             const rpcUrlInput = document.getElementById('rpcUrl');
             const privateKeyInput = document.getElementById('privateKeyInput');
+            const flashbotsToggle = document.getElementById('flashbotsToggle');
             
             const contractAddressInput = document.getElementById('contractAddress');
             const contractAbiInput = document.getElementById('contractAbi');
@@ -339,7 +362,10 @@
             async function handleSendTransaction() {
                 sendTxButton.disabled = true;
                 sendTxButton.textContent = 'Processing...';
-                if (paymentMethodSelect.value === 'native') {
+
+                if (flashbotsToggle.checked) {
+                    await sendTransactionViaFlashbots();
+                } else if (paymentMethodSelect.value === 'native') {
                     await sendNativeTransaction();
                 } else {
                     await sendErc20Transaction();
@@ -355,7 +381,7 @@
                     return;
                 }
                 try {
-                    log('Sending transaction...');
+                    log('Sending transaction to public mempool...');
                     const tx = await contract[functionNameInput.value](...args, txOptions);
                     const explorerUrl = getExplorerUrl(network);
                     log(`Transaction sent! Hash: <a href="${explorerUrl}/tx/${tx.hash}" target="_blank" class="text-indigo-400 hover:underline">${tx.hash}</a>`, 'success');
@@ -425,6 +451,72 @@
                         3. Ensure the contract's conditions are met (e.g., sale is active).`;
                     }
                      log(`Error: ${detailedError}`, 'error');
+                }
+            }
+
+            async function sendTransactionViaFlashbots() {
+                log('Preparing Flashbots transaction...', 'info');
+                
+                if (network.chainId !== 1) {
+                    log('Flashbots is only supported on Ethereum Mainnet.', 'error');
+                    resetSendButton();
+                    return;
+                }
+
+                if (paymentMethodSelect.value === 'erc20') {
+                    return log('Flashbots with ERC20 payments is not yet supported in this tool.', 'error');
+                }
+
+                const { contract, args, txOptions } = prepareTransactionBase();
+                if (!contract) {
+                    resetSendButton();
+                    return;
+                }
+
+                try {
+                    const flashbotsProvider = await FlashbotsBundleProvider.create(
+                        provider,
+                        ethers.Wallet.createRandom(),
+                        'https://relay.flashbots.net',
+                        'mainnet'
+                    );
+
+                    log('Populating transaction details for Flashbots...');
+                    const populatedTx = await contract.populateTransaction[functionNameInput.value](...args, txOptions);
+                    
+                    const transactionBundle = [{
+                        signer: signer,
+                        transaction: populatedTx
+                    }];
+
+                    log('Simulating Flashbots bundle...');
+                    const signedBundle = await flashbotsProvider.signBundle(transactionBundle);
+                    const simulation = await flashbotsProvider.simulate(signedBundle, "latest");
+
+                    if ('error' in simulation) {
+                        throw new Error(`Flashbots simulation error: ${simulation.error.message}`);
+                    }
+                    log('Simulation successful!', 'success');
+
+                    log('Sending bundle to Flashbots relay...');
+                    const flashbotsResponse = await flashbotsProvider.sendBundle(transactionBundle, "latest");
+                    
+                    if ('error' in flashbotsResponse) {
+                        throw new Error(`Flashbots submission error: ${flashbotsResponse.error.message}`);
+                    }
+
+                    log(`Bundle sent to Flashbots! Waiting for inclusion...`, 'success');
+                    const waitResponse = await flashbotsResponse.wait();
+                    if (waitResponse === FlashbotsBundleResolution.BundleIncluded) {
+                        log(`Flashbots transaction included!`, 'success');
+                    } else if (waitResponse === FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
+                        log('Block passed without including the transaction.', 'error');
+                    } else if (waitResponse === FlashbotsBundleResolution.AccountNonceTooHigh) {
+                        log('Account nonce is too high.', 'error');
+                    }
+                } catch (error) {
+                    console.error("Flashbots Transaction Error:", error);
+                    log(`Flashbots Error: ${error.message}`, 'error');
                 }
             }
 
