@@ -191,6 +191,20 @@
                 logArea.scrollTop = logArea.scrollHeight;
             }
 
+            function getExplorerUrl(net) {
+                if (!net) return '';
+                switch (net.chainId) {
+                    case 1: return 'https://etherscan.io';
+                    case 5: return 'https://goerli.etherscan.io';
+                    case 11155111: return 'https://sepolia.etherscan.io';
+                    case 137: return 'https://polygonscan.com';
+                    case 80001: return 'https://mumbai.polygonscan.com';
+                    case 42161: return 'https://arbiscan.io';
+                    case 56: return 'https://bscscan.com';
+                    default: return 'https://etherscan.io'; // Fallback
+                }
+            }
+
             // --- Core Functions ---
             async function connectWallet() {
                 log('Attempting to connect wallet...');
@@ -273,7 +287,8 @@
                 try {
                     log('Sending transaction to public mempool...');
                     const tx = await contract[functionNameInput.value](...args, txOptions);
-                    log(`Transaction sent! Hash: <a href="${network.explorerUrl}/tx/${tx.hash}" target="_blank" class="text-indigo-400 hover:underline">${tx.hash}</a>`, 'success');
+                    const explorerUrl = getExplorerUrl(network);
+                    log(`Transaction sent! Hash: <a href="${explorerUrl}/tx/${tx.hash}" target="_blank" class="text-indigo-400 hover:underline">${tx.hash}</a>`, 'success');
                     await tx.wait();
                     log('Transaction confirmed!', 'success');
                 } catch (error) {
@@ -293,6 +308,7 @@
                 const tokenAddress = tokenAddressInput.value;
                 const tokenAmount = tokenAmountInput.value;
                 const spenderAddress = contractAddressInput.value;
+                const explorerUrl = getExplorerUrl(network);
 
                 if (!ethers.utils.isAddress(tokenAddress) || !ethers.utils.isAddress(spenderAddress) || !tokenAmount) {
                     resetSendButton();
@@ -311,7 +327,7 @@
                     if (currentAllowance.lt(amountToApprove)) {
                         log('Allowance is insufficient. Sending approval transaction...');
                         const approveTx = await tokenContract.approve(spenderAddress, amountToApprove);
-                        log(`Approval transaction sent! Hash: ${approveTx.hash}`, 'success');
+                        log(`Approval transaction sent! Hash: <a href="${explorerUrl}/tx/${approveTx.hash}" target="_blank" class="text-indigo-400 hover:underline">${approveTx.hash}</a>`, 'success');
                         await approveTx.wait();
                         log('Approval confirmed!', 'success');
                     } else {
@@ -326,7 +342,7 @@
                      }
                     
                     const mintTx = await contract[functionNameInput.value](...args, txOptions);
-                    log(`Mint transaction sent! Hash: ${mintTx.hash}`, 'success');
+                    log(`Mint transaction sent! Hash: <a href="${explorerUrl}/tx/${mintTx.hash}" target="_blank" class="text-indigo-400 hover:underline">${mintTx.hash}</a>`, 'success');
                     await mintTx.wait();
                     log('Mint transaction confirmed!', 'success');
 
