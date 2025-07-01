@@ -253,16 +253,25 @@
             async function sendNativeTransaction() {
                 log('Preparing native coin transaction...');
                 const { contract, args, txOptions } = prepareTransactionBase();
-                if (!contract) return;
-
+                if (!contract) {
+                    resetSendButton();
+                    return;
+                }
                 try {
                     log('Sending transaction to public mempool...');
                     const tx = await contract[functionNameInput.value](...args, txOptions);
-                    log(`Transaction sent! Hash: ${tx.hash}`, 'success');
+                    log(`Transaction sent! Hash: <a href="${network.explorerUrl}/tx/${tx.hash}" target="_blank" class="text-indigo-400 hover:underline">${tx.hash}</a>`, 'success');
                     await tx.wait();
                     log('Transaction confirmed!', 'success');
                 } catch (error) {
-                    log(`Error: ${error.reason || error.message}`, 'error');
+                    let detailedError = error.reason || error.message;
+                    if (detailedError.includes('Internal JSON-RPC error')) {
+                        detailedError += `<br><br><strong class="text-yellow-400">Debugging Tips:</strong><br>
+                        1. Check if all arguments are correct (type, order).<br>
+                        2. Check if the 'Value to Send' is correct for this function.<br>
+                        3. Ensure the contract's conditions are met (e.g., sale is active).`;
+                    }
+                    log(`Error: ${detailedError}`, 'error');
                 }
             }
             
@@ -273,6 +282,7 @@
                 const spenderAddress = contractAddressInput.value;
 
                 if (!ethers.utils.isAddress(tokenAddress) || !ethers.utils.isAddress(spenderAddress) || !tokenAmount) {
+                    resetSendButton();
                     return log('Invalid Token Address, Spender Address, or Amount.', 'error');
                 }
 
@@ -297,7 +307,10 @@
 
                     log('Proceeding with mint transaction...');
                     const { contract, args, txOptions } = prepareTransactionBase();
-                     if (!contract) return;
+                     if (!contract) {
+                         resetSendButton();
+                         return;
+                     }
                     
                     const mintTx = await contract[functionNameInput.value](...args, txOptions);
                     log(`Mint transaction sent! Hash: ${mintTx.hash}`, 'success');
@@ -305,7 +318,14 @@
                     log('Mint transaction confirmed!', 'success');
 
                 } catch (error) {
-                     log(`Error: ${error.reason || error.message}`, 'error');
+                     let detailedError = error.reason || error.message;
+                     if (detailedError.includes('Internal JSON-RPC error')) {
+                        detailedError += `<br><br><strong class="text-yellow-400">Debugging Tips:</strong><br>
+                        1. Check if all arguments are correct (type, order).<br>
+                        2. Ensure you have enough ERC20 tokens and have approved the correct amount.<br>
+                        3. Ensure the contract's conditions are met (e.g., sale is active).`;
+                    }
+                     log(`Error: ${detailedError}`, 'error');
                 }
             }
 
@@ -416,4 +436,3 @@
     </script>
 </body>
 </html>
-
