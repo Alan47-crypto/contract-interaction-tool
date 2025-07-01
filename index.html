@@ -55,6 +55,7 @@
                 <div id="wallet-info" class="mt-4 text-center text-sm text-gray-400 hidden">
                     <p>Address: <span id="wallet-address" class="font-mono text-indigo-400"></span></p>
                     <p>Network: <span id="network-name" class="font-mono text-indigo-400"></span></p>
+                    <button id="disconnectButton" class="mt-2 text-sm text-red-400 hover:text-red-300 underline">Disconnect</button>
                 </div>
             </div>
 
@@ -144,6 +145,7 @@
         window.onload = () => {
             // --- DOM Element References ---
             const connectButton = document.getElementById('connectButton');
+            const disconnectButton = document.getElementById('disconnectButton');
             const sendTxButton = document.getElementById('sendTxButton');
             const estimateGasButton = document.getElementById('estimateGasButton');
             const statusDot = document.getElementById('status-dot');
@@ -211,6 +213,15 @@
                     updateConnectionStatus(false);
                 }
             }
+
+            function disconnectWallet() {
+                provider = null;
+                signer = null;
+                userAddress = null;
+                network = null;
+                updateConnectionStatus(false);
+                log('Wallet disconnected.', 'info');
+            }
             
             function updateConnectionStatus(isConnected, address = '', networkName = '') {
                 statusDot.classList.toggle('bg-red-500', !isConnected);
@@ -218,11 +229,13 @@
                 statusDot.classList.toggle('status-dot-pulse', isConnected);
                 statusText.textContent = isConnected ? 'Connected' : 'Not Connected';
                 walletInfoDiv.classList.toggle('hidden', !isConnected);
+                connectButton.classList.toggle('hidden', isConnected);
+
                 if(isConnected) {
                     walletAddressSpan.textContent = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
                     networkNameSpan.textContent = networkName;
                 }
-                connectButton.disabled = isConnected;
+                
                 sendTxButton.disabled = !isConnected;
                 estimateGasButton.disabled = !isConnected;
             }
@@ -419,6 +432,7 @@
             
             // --- Event Listeners ---
             connectButton.addEventListener('click', connectWallet);
+            disconnectButton.addEventListener('click', disconnectWallet);
             sendTxButton.addEventListener('click', handleSendTransaction);
             estimateGasButton.addEventListener('click', estimateGasFee);
             paymentMethodSelect.addEventListener('change', handlePaymentMethodChange);
@@ -429,8 +443,8 @@
             estimateGasButton.disabled = true;
 
             if (typeof window.ethereum !== 'undefined') {
-                window.ethereum.on('accountsChanged', () => connectWallet());
-                window.ethereum.on('chainChanged', () => connectWallet());
+                window.ethereum.on('accountsChanged', () => disconnectWallet());
+                window.ethereum.on('chainChanged', () => disconnectWallet());
             }
         };
     </script>
