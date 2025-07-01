@@ -1,4 +1,5 @@
-Direct Contract Interaction Tool
+# Direct Contract Interaction Tool
+
 A powerful, browser-based tool for advanced Web3 users to interact directly with any smart contract on an EVM-compatible blockchain. This tool allows you to mint NFTs, participate in token presales, claim tokens, and call any contract function without relying on a project's front-end website.
 
 This tool is built with pure HTML, CSS, and JavaScript, using the ethers.js library for blockchain communication and Tailwind CSS for styling.
