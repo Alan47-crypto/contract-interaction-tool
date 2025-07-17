@@ -202,29 +202,34 @@
         }
 
         // --- Define Chains ---
-        const mainnet = { chainId: 1, name: 'Ethereum', currency: 'ETH', explorerUrl: 'https://etherscan.io', rpcUrl: 'https://cloudflare-eth.com' }
-        const polygon = { chainId: 137, name: 'Polygon', currency: 'MATIC', explorerUrl: 'https://polygonscan.com', rpcUrl: 'https://polygon-rpc.com' }
-        const arbitrum = { chainId: 42161, name: 'Arbitrum', currency: 'ETH', explorerUrl: 'https://arbiscan.io', rpcUrl: 'https://arb1.arbitrum.io/rpc' }
-        const bsc = { chainId: 56, name: 'BNB Smart Chain', currency: 'BNB', explorerUrl: 'https://bscscan.com', rpcUrl: 'https://bsc-dataseed.binance.org/' }
-        const avalanche = { chainId: 43114, name: 'Avalanche', currency: 'AVAX', explorerUrl: 'https://snowtrace.io', rpcUrl: 'https://api.avax.network/ext/bc/C/rpc' }
-        const optimism = { chainId: 10, name: 'OP Mainnet', currency: 'ETH', explorerUrl: 'https://optimistic.etherscan.io', rpcUrl: 'https://mainnet.optimism.io' }
-        const base = { chainId: 8453, name: 'Base', currency: 'ETH', explorerUrl: 'https://basescan.org', rpcUrl: 'https://mainnet.base.org' }
-        const fantom = { chainId: 250, name: 'Fantom Opera', currency: 'FTM', explorerUrl: 'https://ftmscan.com', rpcUrl: 'https://rpc.ftm.tools' }
-        const cronos = { chainId: 25, name: 'Cronos', currency: 'CRO', explorerUrl: 'https://cronoscan.com', rpcUrl: 'https://evm.cronos.org' }
-        const gnosis = { chainId: 100, name: 'Gnosis', currency: 'xDAI', explorerUrl: 'https://gnosisscan.io', rpcUrl: 'https://rpc.gnosischain.com' }
-        const moonbeam = { chainId: 1284, name: 'Moonbeam', currency: 'GLMR', explorerUrl: 'https://moonscan.io', rpcUrl: 'https://rpc.api.moonbeam.network' }
-        const moonriver = { chainId: 1285, name: 'Moonriver', currency: 'MOVR', explorerUrl: 'https://moonriver.moonscan.io', rpcUrl: 'https://rpc.api.moonriver.moonbeam.network' }
-        
-        // Testnets
-        const sepolia = { chainId: 11155111, name: 'Sepolia', currency: 'SepoliaETH', explorerUrl: 'https://sepolia.etherscan.io', rpcUrl: 'https://rpc.sepolia.org' }
-        const goerli = { chainId: 5, name: 'Goerli', currency: 'GoerliETH', explorerUrl: 'https://goerli.etherscan.io', rpcUrl: 'https://rpc.goerli.mudit.blog/' }
-        const mumbai = { chainId: 80001, name: 'Polygon Mumbai', currency: 'MATIC', explorerUrl: 'https://mumbai.polygonscan.com', rpcUrl: 'https://rpc-mumbai.maticvigil.com' }
-        const arbitrumSepolia = { chainId: 421614, name: 'Arbitrum Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.arbiscan.io', rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc' }
-        const bscTestnet = { chainId: 97, name: 'BNB Smart Chain Testnet', currency: 'tBNB', explorerUrl: 'https://testnet.bscscan.com', rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545/' }
-        const fuji = { chainId: 43113, name: 'Avalanche Fuji Testnet', currency: 'AVAX', explorerUrl: 'https://testnet.snowtrace.io', rpcUrl: 'https://api.avax-test.network/ext/bc/C/rpc' }
-        const optimismSepolia = { chainId: 11155420, name: 'Optimism Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia-optimism.etherscan.io', rpcUrl: 'https://sepolia.optimism.io' }
-        const baseSepolia = { chainId: 84532, name: 'Base Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.basescan.org', rpcUrl: 'https://sepolia.base.org' }
+        const chains = [
+            { chainId: 1, name: 'Ethereum', currency: 'ETH', explorerUrl: 'https://etherscan.io', rpcUrl: 'https://cloudflare-eth.com' },
+            { chainId: 137, name: 'Polygon', currency: 'MATIC', explorerUrl: 'https://polygonscan.com', rpcUrl: 'https://polygon-rpc.com' },
+            { chainId: 42161, name: 'Arbitrum', currency: 'ETH', explorerUrl: 'https://arbiscan.io', rpcUrl: 'https://arb1.arbitrum.io/rpc' },
+            { chainId: 56, name: 'BNB Smart Chain', currency: 'BNB', explorerUrl: 'https://bscscan.com', rpcUrl: 'https://bsc-dataseed.binance.org/' },
+            { chainId: 43114, name: 'Avalanche', currency: 'AVAX', explorerUrl: 'https://snowtrace.io', rpcUrl: 'https://api.avax.network/ext/bc/C/rpc' },
+            { chainId: 10, name: 'OP Mainnet', currency: 'ETH', explorerUrl: 'https://optimistic.etherscan.io', rpcUrl: 'https://mainnet.optimism.io' },
+            { chainId: 8453, name: 'Base', currency: 'ETH', explorerUrl: 'https://basescan.org', rpcUrl: 'https://mainnet.base.org' },
+            { chainId: 250, name: 'Fantom Opera', currency: 'FTM', explorerUrl: 'https://ftmscan.com', rpcUrl: 'https://rpc.ftm.tools' },
+            { chainId: 25, name: 'Cronos', currency: 'CRO', explorerUrl: 'https://cronoscan.com', rpcUrl: 'https://evm.cronos.org' },
+            { chainId: 100, name: 'Gnosis', currency: 'xDAI', explorerUrl: 'https://gnosisscan.io', rpcUrl: 'https://rpc.gnosischain.com' },
+            { chainId: 1284, name: 'Moonbeam', currency: 'GLMR', explorerUrl: 'https://moonscan.io', rpcUrl: 'https://rpc.api.moonbeam.network' },
+            { chainId: 1285, name: 'Moonriver', currency: 'MOVR', explorerUrl: 'https://moonriver.moonscan.io', rpcUrl: 'https://rpc.api.moonriver.moonbeam.network' },
+            // Testnets
+            { chainId: 11155111, name: 'Sepolia', currency: 'SepoliaETH', explorerUrl: 'https://sepolia.etherscan.io', rpcUrl: 'https://rpc.sepolia.org' },
+            { chainId: 5, name: 'Goerli', currency: 'GoerliETH', explorerUrl: 'https://goerli.etherscan.io', rpcUrl: 'https://rpc.goerli.mudit.blog/' },
+            { chainId: 80001, name: 'Polygon Mumbai', currency: 'MATIC', explorerUrl: 'https://mumbai.polygonscan.com', rpcUrl: 'https://rpc-mumbai.maticvigil.com' },
+            { chainId: 421614, name: 'Arbitrum Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.arbiscan.io', rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc' },
+            { chainId: 97, name: 'BNB Smart Chain Testnet', currency: 'tBNB', explorerUrl: 'https://testnet.bscscan.com', rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545/' },
+            { chainId: 43113, name: 'Avalanche Fuji Testnet', currency: 'AVAX', explorerUrl: 'https://testnet.snowtrace.io', rpcUrl: 'https://api.avax-test.network/ext/bc/C/rpc' },
+            { chainId: 11155420, name: 'Optimism Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia-optimism.etherscan.io', rpcUrl: 'https://sepolia.optimism.io' },
+            { chainId: 84532, name: 'Base Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.basescan.org', rpcUrl: 'https://sepolia.base.org' }
+        ];
 
+        const chainNameMap = chains.reduce((map, chain) => {
+            map[chain.chainId] = chain.name;
+            return map;
+        }, {});
 
         function initializeWeb3Modal() {
             if (!projectId || projectId === 'YOUR_PROJECT_ID') {
@@ -233,7 +238,7 @@
             }
             web3Modal = createWeb3Modal({
                 ethersConfig: defaultConfig({ metadata }),
-                chains: [mainnet, polygon, arbitrum, bsc, avalanche, optimism, base, fantom, cronos, gnosis, moonbeam, moonriver, sepolia, goerli, mumbai, arbitrumSepolia, bscTestnet, fuji, optimismSepolia, baseSepolia],
+                chains: chains,
                 projectId
             });
 
@@ -253,17 +258,8 @@
 
         function getExplorerUrl(net) {
             if (!net) return '';
-            const chainMap = {
-                1: 'https://etherscan.io', 5: 'https://goerli.etherscan.io', 10: 'https://optimistic.etherscan.io',
-                25: 'https://cronoscan.com', 56: 'https://bscscan.com', 97: 'https://testnet.bscscan.com',
-                100: 'https://gnosisscan.io', 137: 'https://polygonscan.com', 250: 'https://ftmscan.com',
-                1284: 'https://moonscan.io', 1285: 'https://moonriver.moonscan.io', 8453: 'https://basescan.org',
-                42161: 'https://arbiscan.io', 43113: 'https://testnet.snowtrace.io', 43114: 'https://snowtrace.io',
-                80001: 'https://mumbai.polygonscan.com', 421614: 'https://sepolia.arbiscan.io',
-                11155111: 'https://sepolia.etherscan.io', 11155420: 'https://sepolia-optimism.etherscan.io',
-                84532: 'https://sepolia.basescan.org'
-            };
-            return chainMap[net.chainId] || 'https://etherscan.io';
+            const chain = chains.find(c => c.chainId === net.chainId);
+            return chain ? chain.explorerUrl : 'https://etherscan.io';
         }
 
         // --- Core Functions ---
@@ -273,8 +269,9 @@
                 const modalProvider = new ethers.providers.Web3Provider(newProvider);
                 signer = await modalProvider.getSigner();
                 network = await modalProvider.getNetwork();
-                updateConnectionStatus(true, address, network.name);
-                log(`Wallet connected on network: ${network.name}.`, 'success');
+                const networkName = chainNameMap[chainId] || `Unknown (ID: ${chainId})`;
+                updateConnectionStatus(true, address, networkName);
+                log(`Wallet connected on network: ${networkName}.`, 'success');
             } else {
                 disconnectWallet();
             }
