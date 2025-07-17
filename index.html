@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Contract Interaction Tool with Gas Estimation</title>
+    <title>Smart Contract Interaction Tool</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Ethers.js for blockchain interaction from Cloudflare CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <!-- Flashbots provider -->
-    <script src="https://unpkg.com/@flashbots/ethers-provider-bundle@latest/dist/ethers-provider-bundle.umd.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +37,7 @@
     <div class="w-full max-w-2xl mx-auto">
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-white">Direct Contract Interaction</h1>
-            <p class="text-gray-400 mt-2">With Flashbots, Gas Estimation, and ERC20 Token support.</p>
+            <p class="text-gray-400 mt-2">With Web3Modal, Gas Estimation, and ERC20 Token support.</p>
         </header>
 
         <!-- Main Application -->
@@ -54,41 +52,13 @@
                     </div>
                 </div>
 
-                <!-- Connection Method Toggle -->
-                <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Connection Method</label>
-                    <select id="connectionMethod" class="w-full bg-gray-900 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="metamask">MetaMask (Recommended)</option>
-                        <option value="privateKey">Private Key (Advanced & High Risk)</option>
-                    </select>
-                </div>
-
-                <!-- MetaMask Connection -->
-                <div id="metamaskConnectWrapper">
+                <!-- Web3Modal Connect Button -->
+                <div id="connectWrapper">
                     <button id="connectButton" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">
-                        Connect with MetaMask
+                        Connect Wallet
                     </button>
                 </div>
                 
-                <!-- Private Key Connection -->
-                <div id="privateKeyConnectWrapper" class="hidden mt-4 space-y-4">
-                    <div class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 px-4 py-3 rounded-lg" role="alert">
-                        <strong class="font-bold">EXTREME WARNING!</strong>
-                        <p class="text-sm mt-1">Pasting your private key into any website is incredibly risky. An attacker could steal all your funds. Only use a temporary "burner" wallet that you plan to discard. You assume all risk.</p>
-                    </div>
-                    <div>
-                        <label for="rpcUrl" class="block text-sm font-medium text-gray-300">RPC URL</label>
-                        <input type="text" id="rpcUrl" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white" placeholder="https://mainnet.infura.io/v3/your-key">
-                    </div>
-                    <div>
-                        <label for="privateKeyInput" class="block text-sm font-medium text-gray-300">Burner Wallet Private Key</label>
-                        <input type="password" id="privateKeyInput" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white">
-                    </div>
-                    <button id="connectPkButton" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">
-                        Connect with Private Key
-                    </button>
-                </div>
-
                 <div id="wallet-info" class="mt-4 text-center text-sm text-gray-400 hidden">
                     <p>Address: <span id="wallet-address" class="font-mono text-indigo-400"></span></p>
                     <p>Network: <span id="network-name" class="font-mono text-indigo-400"></span></p>
@@ -114,18 +84,6 @@
             <!-- Step 3: Transaction -->
             <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <h2 class="text-xl font-semibold text-white">Step 3: Build & Send Transaction</h2>
-                
-                 <!-- Flashbots Toggle -->
-                <div class="flex items-center justify-between mt-4 bg-gray-900/50 p-3 rounded-lg">
-                    <div>
-                        <h3 class="font-semibold text-white">Use Flashbots Protection</h3>
-                        <p class="text-sm text-gray-400">Sends transaction privately to avoid front-running. (Ethereum Mainnet only)</p>
-                    </div>
-                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="toggle" id="flashbotsToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                        <label for="flashbotsToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-700 cursor-pointer"></label>
-                    </div>
-                </div>
                 
                 <!-- Payment Method -->
                 <div class="mt-4">
@@ -190,443 +148,367 @@
         </div>
     </div>
 
-    <script>
-        window.onload = () => {
-            // --- DOM Element References ---
-            const connectionMethodSelect = document.getElementById('connectionMethod');
-            const metamaskConnectWrapper = document.getElementById('metamaskConnectWrapper');
-            const privateKeyConnectWrapper = document.getElementById('privateKeyConnectWrapper');
-            const connectButton = document.getElementById('connectButton');
-            const connectPkButton = document.getElementById('connectPkButton');
-            const disconnectButton = document.getElementById('disconnectButton');
-            const sendTxButton = document.getElementById('sendTxButton');
-            const estimateGasButton = document.getElementById('estimateGasButton');
-            const statusDot = document.getElementById('status-dot');
-            const statusText = document.getElementById('status-text');
-            const walletInfoDiv = document.getElementById('wallet-info');
-            const walletAddressSpan = document.getElementById('wallet-address');
-            const networkNameSpan = document.getElementById('network-name');
-            const logArea = document.getElementById('logArea');
-            const gasEstimateResult = document.getElementById('gasEstimateResult');
-            const rpcUrlInput = document.getElementById('rpcUrl');
-            const privateKeyInput = document.getElementById('privateKeyInput');
-            const flashbotsToggle = document.getElementById('flashbotsToggle');
+    <script type="module">
+        import { createWeb3Modal, defaultConfig } from 'https://cdn.jsdelivr.net/npm/@web3modal/ethers@4.1.12/+esm'
+
+        // --- DOM Element References ---
+        const connectButton = document.getElementById('connectButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+        const sendTxButton = document.getElementById('sendTxButton');
+        const estimateGasButton = document.getElementById('estimateGasButton');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const walletInfoDiv = document.getElementById('wallet-info');
+        const walletAddressSpan = document.getElementById('wallet-address');
+        const networkNameSpan = document.getElementById('network-name');
+        const logArea = document.getElementById('logArea');
+        const gasEstimateResult = document.getElementById('gasEstimateResult');
+        
+        const contractAddressInput = document.getElementById('contractAddress');
+        const contractAbiInput = document.getElementById('contractAbi');
+        const functionNameInput = document.getElementById('functionName');
+        const functionArgsInput = document.getElementById('functionArgs');
+        
+        const paymentMethodSelect = document.getElementById('paymentMethod');
+        const nativePaymentFields = document.getElementById('nativePaymentFields');
+        const erc20PaymentFields = document.getElementById('erc20PaymentFields');
+        const payableValueInput = document.getElementById('payableValue');
+        const tokenAddressInput = document.getElementById('tokenAddress');
+        const tokenAmountInput = document.getElementById('tokenAmount');
+
+        // --- Ethers.js State Variables ---
+        let provider;
+        let signer;
+        let userAddress;
+        let network;
+        let web3Modal;
+
+        // --- ERC20 ABI for standard functions ---
+        const ERC20_ABI = [
+            "function approve(address spender, uint256 amount) public returns (bool)",
+            "function allowance(address owner, address spender) public view returns (uint256)",
+            "function decimals() public view returns (uint8)"
+        ];
+
+        // --- Web3Modal Configuration ---
+        // 1. Get projectId from https://dashboard.reown.com/
+        const projectId = 'cf1e4bdcd7c65571abab7ee24475047e'; 
+
+        const metadata = {
+            name: 'Direct Contract Interaction Tool',
+            description: 'A tool to interact directly with smart contracts.',
+            url: window.location.href,
+            icons: ['https://avatars.githubusercontent.com/u/37784886']
+        }
+
+        const mainnet = {
+            chainId: 1,
+            name: 'Ethereum',
+            currency: 'ETH',
+            explorerUrl: 'https://etherscan.io',
+            rpcUrl: 'https://cloudflare-eth.com'
+        }
+
+        const polygon = {
+            chainId: 137,
+            name: 'Polygon',
+            currency: 'MATIC',
+            explorerUrl: 'https://polygonscan.com',
+            rpcUrl: 'https://polygon-rpc.com'
+        }
+
+        const arbitrum = {
+            chainId: 42161,
+            name: 'Arbitrum',
+            currency: 'ETH',
+            explorerUrl: 'https://arbiscan.io',
+            rpcUrl: 'https://arb1.arbitrum.io/rpc'
+        }
+
+        function initializeWeb3Modal() {
+            if (!projectId || projectId === 'YOUR_PROJECT_ID') {
+                log('Web3Modal Error: You must provide a valid projectId from https://dashboard.reown.com/', 'error');
+                return;
+            }
+            web3Modal = createWeb3Modal({
+                ethersConfig: defaultConfig({ metadata }),
+                chains: [mainnet, polygon, arbitrum],
+                projectId
+            });
+
+            // Subscribe to connection changes
+            web3Modal.subscribeProvider(handleProviderUpdate);
+        }
+
+        // --- Utility Functions ---
+        function log(message, type = 'info') {
+            const now = new Date().toLocaleTimeString();
+            let colorClass = 'text-gray-400';
+            if (type === 'error') colorClass = 'text-red-400';
+            if (type === 'success') colorClass = 'text-green-400';
+            logArea.innerHTML += `<p><span class="text-gray-500">${now}:</span> <span class="${colorClass}">${message}</span></p>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function getExplorerUrl(net) {
+            if (!net) return '';
+            switch (net.chainId) {
+                case 1: return 'https://etherscan.io';
+                case 5: return 'https://goerli.etherscan.io';
+                case 11155111: return 'https://sepolia.etherscan.io';
+                case 137: return 'https://polygonscan.com';
+                case 80001: return 'https://mumbai.polygonscan.com';
+                case 42161: return 'https://arbiscan.io';
+                case 56: return 'https://bscscan.com';
+                default: return 'https://etherscan.io'; // Fallback
+            }
+        }
+
+        // --- Core Functions ---
+        async function handleProviderUpdate({ provider: newProvider, providerType, address, chainId, isConnected }) {
+            if (isConnected && address && chainId) {
+                userAddress = address;
+                const modalProvider = new ethers.providers.Web3Provider(newProvider);
+                signer = await modalProvider.getSigner();
+                network = await modalProvider.getNetwork();
+                updateConnectionStatus(true, address, network.name);
+                log(`Wallet connected on network: ${network.name}.`, 'success');
+            } else {
+                disconnectWallet();
+            }
+        }
+
+        function disconnectWallet() {
+            provider = null;
+            signer = null;
+            userAddress = null;
+            network = null;
+            updateConnectionStatus(false);
+            log('Wallet disconnected.', 'info');
+        }
+        
+        function updateConnectionStatus(isConnected, address = '', networkName = '') {
+            statusDot.classList.toggle('bg-red-500', !isConnected);
+            statusDot.classList.toggle('bg-green-500', isConnected);
+            statusDot.classList.toggle('status-dot-pulse', isConnected);
+            statusText.textContent = isConnected ? 'Connected' : 'Not Connected';
+            walletInfoDiv.classList.toggle('hidden', !isConnected);
+            connectButton.classList.toggle('hidden', isConnected);
+
+            if(isConnected) {
+                walletAddressSpan.textContent = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+                networkNameSpan.textContent = networkName;
+            }
             
-            const contractAddressInput = document.getElementById('contractAddress');
-            const contractAbiInput = document.getElementById('contractAbi');
-            const functionNameInput = document.getElementById('functionName');
-            const functionArgsInput = document.getElementById('functionArgs');
-            
-            const paymentMethodSelect = document.getElementById('paymentMethod');
-            const nativePaymentFields = document.getElementById('nativePaymentFields');
-            const erc20PaymentFields = document.getElementById('erc20PaymentFields');
-            const payableValueInput = document.getElementById('payableValue');
-            const tokenAddressInput = document.getElementById('tokenAddress');
-            const tokenAmountInput = document.getElementById('tokenAmount');
+            sendTxButton.disabled = !isConnected;
+            estimateGasButton.disabled = !isConnected;
+        }
 
-            // --- Ethers.js State Variables ---
-            let provider;
-            let signer;
-            let userAddress;
-            let network;
+        function handlePaymentMethodChange() {
+            const isNative = paymentMethodSelect.value === 'native';
+            nativePaymentFields.classList.toggle('hidden', !isNative);
+            erc20PaymentFields.classList.toggle('hidden', isNative);
+            updateSendButtonText();
+        }
 
-            // --- ERC20 ABI for standard functions ---
-            const ERC20_ABI = [
-                "function approve(address spender, uint256 amount) public returns (bool)",
-                "function allowance(address owner, address spender) public view returns (uint256)",
-                "function decimals() public view returns (uint8)"
-            ];
+        function updateSendButtonText() {
+            const isNative = paymentMethodSelect.value === 'native';
+            sendTxButton.textContent = isNative ? 'Send Transaction' : 'Approve & Mint';
+        }
 
-            // --- Utility Functions ---
-            function log(message, type = 'info') {
-                const now = new Date().toLocaleTimeString();
-                let colorClass = 'text-gray-400';
-                if (type === 'error') colorClass = 'text-red-400';
-                if (type === 'success') colorClass = 'text-green-400';
-                logArea.innerHTML += `<p><span class="text-gray-500">${now}:</span> <span class="${colorClass}">${message}</span></p>`;
-                logArea.scrollTop = logArea.scrollHeight;
+        async function handleSendTransaction() {
+            sendTxButton.disabled = true;
+            sendTxButton.textContent = 'Processing...';
+            if (paymentMethodSelect.value === 'native') {
+                await sendNativeTransaction();
+            } else {
+                await sendErc20Transaction();
             }
+            resetSendButton();
+        }
 
-            function getExplorerUrl(net) {
-                if (!net) return '';
-                switch (net.chainId) {
-                    case 1: return 'https://etherscan.io';
-                    case 5: return 'https://goerli.etherscan.io';
-                    case 11155111: return 'https://sepolia.etherscan.io';
-                    case 137: return 'https://polygonscan.com';
-                    case 80001: return 'https://mumbai.polygonscan.com';
-                    case 42161: return 'https://arbiscan.io';
-                    case 56: return 'https://bscscan.com';
-                    default: return 'https://etherscan.io'; // Fallback
-                }
-            }
-
-            // --- Core Functions ---
-            async function connectWithMetaMask() {
-                log('Attempting to connect with MetaMask...');
-                if (typeof window.ethereum === 'undefined') {
-                    return log('MetaMask is not installed.', 'error');
-                }
-                if (typeof ethers === 'undefined') {
-                    return log('Ethers.js library failed to load. Please check your internet connection or ad-blocker and refresh the page.', 'error');
-                }
-                try {
-                    provider = new ethers.providers.Web3Provider(window.ethereum);
-                    await provider.send("eth_requestAccounts", []);
-                    signer = provider.getSigner();
-                    userAddress = await signer.getAddress();
-                    network = await provider.getNetwork();
-                    updateConnectionStatus(true, userAddress, network.name);
-                    log(`Wallet connected on network: ${network.name}.`, 'success');
-                } catch (error) {
-                    log(`Connection failed: ${error.message}`, 'error');
-                    updateConnectionStatus(false);
-                }
-            }
-
-            async function connectWithPrivateKey() {
-                log('Attempting to connect with Private Key...');
-                const rpcUrl = rpcUrlInput.value;
-                const pk = privateKeyInput.value;
-
-                if (!rpcUrl || !pk) {
-                    return log('RPC URL and Private Key are required.', 'error');
-                }
-                if (typeof ethers === 'undefined') {
-                    return log('Ethers.js library failed to load. Please refresh.', 'error');
-                }
-                try {
-                    provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-                    signer = new ethers.Wallet(pk, provider);
-                    userAddress = await signer.getAddress();
-                    network = await provider.getNetwork();
-                    updateConnectionStatus(true, userAddress, network.name);
-                    log(`Wallet connected via Private Key on network: ${network.name}.`, 'success');
-                } catch (error) {
-                    log(`Connection failed: ${error.message}`, 'error');
-                    updateConnectionStatus(false);
-                }
-            }
-
-            function disconnectWallet() {
-                provider = null;
-                signer = null;
-                userAddress = null;
-                network = null;
-                privateKeyInput.value = '';
-                rpcUrlInput.value = '';
-                updateConnectionStatus(false);
-                log('Wallet disconnected.', 'info');
-            }
-            
-            function updateConnectionStatus(isConnected, address = '', networkName = '') {
-                statusDot.classList.toggle('bg-red-500', !isConnected);
-                statusDot.classList.toggle('bg-green-500', isConnected);
-                statusDot.classList.toggle('status-dot-pulse', isConnected);
-                statusText.textContent = isConnected ? 'Connected' : 'Not Connected';
-                walletInfoDiv.classList.toggle('hidden', !isConnected);
-                
-                const isPkMode = connectionMethodSelect.value === 'privateKey';
-                metamaskConnectWrapper.classList.toggle('hidden', isConnected || isPkMode);
-                privateKeyConnectWrapper.classList.toggle('hidden', isConnected || !isPkMode);
-                connectionMethodSelect.disabled = isConnected;
-
-
-                if(isConnected) {
-                    walletAddressSpan.textContent = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-                    networkNameSpan.textContent = networkName;
-                }
-                
-                sendTxButton.disabled = !isConnected;
-                estimateGasButton.disabled = !isConnected;
-            }
-
-            function handleConnectionMethodChange() {
-                const isPkMode = connectionMethodSelect.value === 'privateKey';
-                metamaskConnectWrapper.classList.toggle('hidden', isPkMode);
-                privateKeyConnectWrapper.classList.toggle('hidden', !isPkMode);
-            }
-
-            function handlePaymentMethodChange() {
-                const isNative = paymentMethodSelect.value === 'native';
-                nativePaymentFields.classList.toggle('hidden', !isNative);
-                erc20PaymentFields.classList.toggle('hidden', isNative);
-                updateSendButtonText();
-            }
-
-            function updateSendButtonText() {
-                const isNative = paymentMethodSelect.value === 'native';
-                sendTxButton.textContent = isNative ? 'Send Transaction' : 'Approve & Mint';
-            }
-
-            async function handleSendTransaction() {
-                sendTxButton.disabled = true;
-                sendTxButton.textContent = 'Processing...';
-
-                if (flashbotsToggle.checked) {
-                    await sendTransactionViaFlashbots();
-                } else if (paymentMethodSelect.value === 'native') {
-                    await sendNativeTransaction();
-                } else {
-                    await sendErc20Transaction();
-                }
+        async function sendNativeTransaction() {
+            log('Preparing native coin transaction...');
+            const { contract, args, txOptions } = prepareTransactionBase();
+            if (!contract) {
                 resetSendButton();
+                return;
+            }
+            try {
+                log('Sending transaction to public mempool...');
+                const tx = await contract[functionNameInput.value](...args, txOptions);
+                const explorerUrl = getExplorerUrl(network);
+                log(`Transaction sent! Hash: <a href="${explorerUrl}/tx/${tx.hash}" target="_blank" class="text-indigo-400 hover:underline">${tx.hash}</a>`, 'success');
+                await tx.wait();
+                log('Transaction confirmed!', 'success');
+            } catch (error) {
+                let detailedError = error.reason || error.message;
+                if (detailedError.includes('Internal JSON-RPC error')) {
+                    detailedError += `<br><br><strong class="text-yellow-400">Debugging Tips:</strong><br>
+                    1. Check if all arguments are correct (type, order).<br>
+                    2. Check if the 'Value to Send' is correct for this function.<br>
+                    3. Ensure the contract's conditions are met (e.g., sale is active).`;
+                }
+                log(`Error: ${detailedError}`, 'error');
+            }
+        }
+        
+        async function sendErc20Transaction() {
+            log('Preparing ERC20 token transaction...');
+            const tokenAddress = tokenAddressInput.value;
+            const tokenAmount = tokenAmountInput.value;
+            const spenderAddress = contractAddressInput.value;
+            const explorerUrl = getExplorerUrl(network);
+
+            if (!ethers.utils.isAddress(tokenAddress) || !ethers.utils.isAddress(spenderAddress) || !tokenAmount) {
+                resetSendButton();
+                return log('Invalid Token Address, Spender Address, or Amount.', 'error');
             }
 
-            async function sendNativeTransaction() {
-                log('Preparing native coin transaction...');
+            const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+            
+            try {
+                const decimals = await tokenContract.decimals();
+                const amountToApprove = ethers.utils.parseUnits(tokenAmount, decimals);
+
+                log(`Checking allowance for ${spenderAddress}...`);
+                const currentAllowance = await tokenContract.allowance(userAddress, spenderAddress);
+                
+                if (currentAllowance.lt(amountToApprove)) {
+                    log('Allowance is insufficient. Sending approval transaction...');
+                    const approveTx = await tokenContract.approve(spenderAddress, amountToApprove);
+                    log(`Approval transaction sent! Hash: <a href="${explorerUrl}/tx/${approveTx.hash}" target="_blank" class="text-indigo-400 hover:underline">${approveTx.hash}</a>`, 'success');
+                    await approveTx.wait();
+                    log('Approval confirmed!', 'success');
+                } else {
+                    log('Sufficient allowance already exists.', 'info');
+                }
+
+                log('Proceeding with mint transaction...');
+                const { contract, args, txOptions } = prepareTransactionBase();
+                 if (!contract) {
+                     resetSendButton();
+                     return;
+                 }
+                
+                const mintTx = await contract[functionNameInput.value](...args, txOptions);
+                log(`Mint transaction sent! Hash: <a href="${explorerUrl}/tx/${mintTx.hash}" target="_blank" class="text-indigo-400 hover:underline">${mintTx.hash}</a>`, 'success');
+                await mintTx.wait();
+                log('Mint transaction confirmed!', 'success');
+
+            } catch (error) {
+                 let detailedError = error.reason || error.message;
+                 if (detailedError.includes('Internal JSON-RPC error')) {
+                    detailedError += `<br><br><strong class="text-yellow-400">Debugging Tips:</strong><br>
+                    1. Check if all arguments are correct (type, order).<br>
+                    2. Ensure you have enough ERC20 tokens and have approved the correct amount.<br>
+                    3. Ensure the contract's conditions are met (e.g., sale is active).`;
+                }
+                 log(`Error: ${detailedError}`, 'error');
+            }
+        }
+
+        function prepareTransactionBase() {
+            const contractAddress = contractAddressInput.value;
+            const abiString = contractAbiInput.value;
+            const functionName = functionNameInput.value;
+            const argsString = functionArgsInput.value;
+            
+            if (!ethers.utils.isAddress(contractAddress) || !functionName) {
+                log('Invalid Contract Address or Function Name.', 'error');
+                return {};
+            }
+            let abi;
+            try {
+                abi = JSON.parse(abiString);
+            } catch (e) {
+                log('Invalid ABI. Must be valid JSON.', 'error');
+                return {};
+            }
+
+            const contract = new ethers.Contract(contractAddress, abi, signer);
+            const args = argsString ? argsString.split(',').map(arg => arg.trim()) : [];
+            const txOptions = {};
+            if (paymentMethodSelect.value === 'native' && payableValueInput.value) {
+                txOptions.value = ethers.utils.parseEther(payableValueInput.value);
+            }
+
+            return { contract, args, txOptions };
+        }
+
+        async function estimateGasFee() {
+            estimateGasButton.disabled = true;
+            gasEstimateResult.textContent = 'Estimating...';
+            gasEstimateResult.classList.remove('text-red-400');
+
+            try {
                 const { contract, args, txOptions } = prepareTransactionBase();
                 if (!contract) {
-                    resetSendButton();
-                    return;
+                    throw new Error("Failed to prepare transaction. Check inputs.");
                 }
-                try {
-                    log('Sending transaction to public mempool...');
-                    const tx = await contract[functionNameInput.value](...args, txOptions);
-                    const explorerUrl = getExplorerUrl(network);
-                    log(`Transaction sent! Hash: <a href="${explorerUrl}/tx/${tx.hash}" target="_blank" class="text-indigo-400 hover:underline">${tx.hash}</a>`, 'success');
-                    await tx.wait();
-                    log('Transaction confirmed!', 'success');
-                } catch (error) {
-                    let detailedError = error.reason || error.message;
-                    if (detailedError.includes('Internal JSON-RPC error')) {
-                        detailedError += `<br><br><strong class="text-yellow-400">Debugging Tips:</strong><br>
-                        1. Check if all arguments are correct (type, order).<br>
-                        2. Check if the 'Value to Send' is correct for this function.<br>
-                        3. Ensure the contract's conditions are met (e.g., sale is active).`;
+                const gasPrice = await signer.getGasPrice();
+                let totalFee = ethers.BigNumber.from(0);
+                let feeBreakdown = [];
+
+                // Estimate ERC20 approve transaction if needed
+                if (paymentMethodSelect.value === 'erc20') {
+                    const tokenAddress = tokenAddressInput.value;
+                    const tokenAmount = tokenAmountInput.value;
+                    const spenderAddress = contractAddressInput.value;
+
+                    if (!ethers.utils.isAddress(tokenAddress) || !ethers.utils.isAddress(spenderAddress) || !tokenAmount) {
+                       throw new Error('Invalid ERC20 details for estimation.');
                     }
-                    log(`Error: ${detailedError}`, 'error');
-                }
-            }
-            
-            async function sendErc20Transaction() {
-                log('Preparing ERC20 token transaction...');
-                const tokenAddress = tokenAddressInput.value;
-                const tokenAmount = tokenAmountInput.value;
-                const spenderAddress = contractAddressInput.value;
-                const explorerUrl = getExplorerUrl(network);
-
-                if (!ethers.utils.isAddress(tokenAddress) || !ethers.utils.isAddress(spenderAddress) || !tokenAmount) {
-                    resetSendButton();
-                    return log('Invalid Token Address, Spender Address, or Amount.', 'error');
-                }
-
-                const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
-                
-                try {
+                    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
                     const decimals = await tokenContract.decimals();
                     const amountToApprove = ethers.utils.parseUnits(tokenAmount, decimals);
-
-                    log(`Checking allowance for ${spenderAddress}...`);
                     const currentAllowance = await tokenContract.allowance(userAddress, spenderAddress);
-                    
+
                     if (currentAllowance.lt(amountToApprove)) {
-                        log('Allowance is insufficient. Sending approval transaction...');
-                        const approveTx = await tokenContract.approve(spenderAddress, amountToApprove);
-                        log(`Approval transaction sent! Hash: <a href="${explorerUrl}/tx/${approveTx.hash}" target="_blank" class="text-indigo-400 hover:underline">${approveTx.hash}</a>`, 'success');
-                        await approveTx.wait();
-                        log('Approval confirmed!', 'success');
-                    } else {
-                        log('Sufficient allowance already exists.', 'info');
+                        const approveGas = await tokenContract.estimateGas.approve(spenderAddress, amountToApprove);
+                        const approveFee = approveGas.mul(gasPrice);
+                        totalFee = totalFee.add(approveFee);
+                        feeBreakdown.push(`Approve: ~${ethers.utils.formatEther(approveFee).substring(0, 8)}`);
                     }
-
-                    log('Proceeding with mint transaction...');
-                    const { contract, args, txOptions } = prepareTransactionBase();
-                     if (!contract) {
-                         resetSendButton();
-                         return;
-                     }
-                    
-                    const mintTx = await contract[functionNameInput.value](...args, txOptions);
-                    log(`Mint transaction sent! Hash: <a href="${explorerUrl}/tx/${mintTx.hash}" target="_blank" class="text-indigo-400 hover:underline">${mintTx.hash}</a>`, 'success');
-                    await mintTx.wait();
-                    log('Mint transaction confirmed!', 'success');
-
-                } catch (error) {
-                     let detailedError = error.reason || error.message;
-                     if (detailedError.includes('Internal JSON-RPC error')) {
-                        detailedError += `<br><br><strong class="text-yellow-400">Debugging Tips:</strong><br>
-                        1. Check if all arguments are correct (type, order).<br>
-                        2. Ensure you have enough ERC20 tokens and have approved the correct amount.<br>
-                        3. Ensure the contract's conditions are met (e.g., sale is active).`;
-                    }
-                     log(`Error: ${detailedError}`, 'error');
                 }
+
+                // Estimate main transaction
+                const mainTxGas = await contract.estimateGas[functionNameInput.value](...args, txOptions);
+                const mainTxFee = mainTxGas.mul(gasPrice);
+                totalFee = totalFee.add(mainTxFee);
+                feeBreakdown.push(`Mint/Call: ~${ethers.utils.formatEther(mainTxFee).substring(0, 8)}`);
+
+                gasEstimateResult.textContent = `${feeBreakdown.join(' + ')} ETH`;
+                log(`Gas estimation successful. Total estimated cost: ~${ethers.utils.formatEther(totalFee).substring(0, 8)} ETH`, 'success');
+
+            } catch (error) {
+                const errorMessage = error.reason || error.message;
+                gasEstimateResult.textContent = 'Estimation Failed';
+                gasEstimateResult.classList.add('text-red-400');
+                log(`Gas estimation failed: ${errorMessage}`, 'error');
+            } finally {
+                estimateGasButton.disabled = false;
             }
+        }
 
-            async function sendTransactionViaFlashbots() {
-                log('Preparing Flashbots transaction...', 'info');
-                
-                if (network.chainId !== 1) {
-                    log('Flashbots is only supported on Ethereum Mainnet.', 'error');
-                    resetSendButton();
-                    return;
-                }
-
-                if (paymentMethodSelect.value === 'erc20') {
-                    return log('Flashbots with ERC20 payments is not yet supported in this tool.', 'error');
-                }
-
-                const { contract, args, txOptions } = prepareTransactionBase();
-                if (!contract) {
-                    resetSendButton();
-                    return;
-                }
-
-                try {
-                    const flashbotsProvider = await FlashbotsBundleProvider.create(
-                        provider,
-                        ethers.Wallet.createRandom(),
-                        'https://relay.flashbots.net',
-                        'mainnet'
-                    );
-
-                    log('Populating transaction details for Flashbots...');
-                    const populatedTx = await contract.populateTransaction[functionNameInput.value](...args, txOptions);
-                    
-                    const transactionBundle = [{
-                        signer: signer,
-                        transaction: populatedTx
-                    }];
-
-                    log('Simulating Flashbots bundle...');
-                    const signedBundle = await flashbotsProvider.signBundle(transactionBundle);
-                    const simulation = await flashbotsProvider.simulate(signedBundle, "latest");
-
-                    if ('error' in simulation) {
-                        throw new Error(`Flashbots simulation error: ${simulation.error.message}`);
-                    }
-                    log('Simulation successful!', 'success');
-
-                    log('Sending bundle to Flashbots relay...');
-                    const flashbotsResponse = await flashbotsProvider.sendBundle(transactionBundle, "latest");
-                    
-                    if ('error' in flashbotsResponse) {
-                        throw new Error(`Flashbots submission error: ${flashbotsResponse.error.message}`);
-                    }
-
-                    log(`Bundle sent to Flashbots! Waiting for inclusion...`, 'success');
-                    const waitResponse = await flashbotsResponse.wait();
-                    if (waitResponse === FlashbotsBundleResolution.BundleIncluded) {
-                        log(`Flashbots transaction included!`, 'success');
-                    } else if (waitResponse === FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
-                        log('Block passed without including the transaction.', 'error');
-                    } else if (waitResponse === FlashbotsBundleResolution.AccountNonceTooHigh) {
-                        log('Account nonce is too high.', 'error');
-                    }
-                } catch (error) {
-                    console.error("Flashbots Transaction Error:", error);
-                    log(`Flashbots Error: ${error.message}`, 'error');
-                }
-            }
-
-            function prepareTransactionBase() {
-                const contractAddress = contractAddressInput.value;
-                const abiString = contractAbiInput.value;
-                const functionName = functionNameInput.value;
-                const argsString = functionArgsInput.value;
-                
-                if (!ethers.utils.isAddress(contractAddress) || !functionName) {
-                    log('Invalid Contract Address or Function Name.', 'error');
-                    return {};
-                }
-                let abi;
-                try {
-                    abi = JSON.parse(abiString);
-                } catch (e) {
-                    log('Invalid ABI. Must be valid JSON.', 'error');
-                    return {};
-                }
-
-                const contract = new ethers.Contract(contractAddress, abi, signer);
-                const args = argsString ? argsString.split(',').map(arg => arg.trim()) : [];
-                const txOptions = {};
-                if (paymentMethodSelect.value === 'native' && payableValueInput.value) {
-                    txOptions.value = ethers.utils.parseEther(payableValueInput.value);
-                }
-
-                return { contract, args, txOptions };
-            }
-
-            async function estimateGasFee() {
-                estimateGasButton.disabled = true;
-                gasEstimateResult.textContent = 'Estimating...';
-                gasEstimateResult.classList.remove('text-red-400');
-
-                try {
-                    const { contract, args, txOptions } = prepareTransactionBase();
-                    if (!contract) {
-                        throw new Error("Failed to prepare transaction. Check inputs.");
-                    }
-                    const gasPrice = await provider.getGasPrice();
-                    let totalFee = ethers.BigNumber.from(0);
-                    let feeBreakdown = [];
-
-                    // Estimate ERC20 approve transaction if needed
-                    if (paymentMethodSelect.value === 'erc20') {
-                        const tokenAddress = tokenAddressInput.value;
-                        const tokenAmount = tokenAmountInput.value;
-                        const spenderAddress = contractAddressInput.value;
-
-                        if (!ethers.utils.isAddress(tokenAddress) || !ethers.utils.isAddress(spenderAddress) || !tokenAmount) {
-                           throw new Error('Invalid ERC20 details for estimation.');
-                        }
-                        const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
-                        const decimals = await tokenContract.decimals();
-                        const amountToApprove = ethers.utils.parseUnits(tokenAmount, decimals);
-                        const currentAllowance = await tokenContract.allowance(userAddress, spenderAddress);
-
-                        if (currentAllowance.lt(amountToApprove)) {
-                            const approveGas = await tokenContract.estimateGas.approve(spenderAddress, amountToApprove);
-                            const approveFee = approveGas.mul(gasPrice);
-                            totalFee = totalFee.add(approveFee);
-                            feeBreakdown.push(`Approve: ~${ethers.utils.formatEther(approveFee).substring(0, 8)}`);
-                        }
-                    }
-
-                    // Estimate main transaction
-                    const mainTxGas = await contract.estimateGas[functionNameInput.value](...args, txOptions);
-                    const mainTxFee = mainTxGas.mul(gasPrice);
-                    totalFee = totalFee.add(mainTxFee);
-                    feeBreakdown.push(`Mint/Call: ~${ethers.utils.formatEther(mainTxFee).substring(0, 8)}`);
-
-                    gasEstimateResult.textContent = `${feeBreakdown.join(' + ')} ETH`;
-                    log(`Gas estimation successful. Total estimated cost: ~${ethers.utils.formatEther(totalFee).substring(0, 8)} ETH`, 'success');
-
-                } catch (error) {
-                    const errorMessage = error.reason || error.message;
-                    gasEstimateResult.textContent = 'Estimation Failed';
-                    gasEstimateResult.classList.add('text-red-400');
-                    log(`Gas estimation failed: ${errorMessage}`, 'error');
-                } finally {
-                    estimateGasButton.disabled = false;
-                }
-            }
-
-            function resetSendButton() {
-                sendTxButton.disabled = false;
-                updateSendButtonText();
-            }
-            
-            // --- Event Listeners ---
-            connectionMethodSelect.addEventListener('change', handleConnectionMethodChange);
-            connectButton.addEventListener('click', connectWithMetaMask);
-            connectPkButton.addEventListener('click', connectWithPrivateKey);
-            disconnectButton.addEventListener('click', disconnectWallet);
-            sendTxButton.addEventListener('click', handleSendTransaction);
-            estimateGasButton.addEventListener('click', estimateGasFee);
-            paymentMethodSelect.addEventListener('change', handlePaymentMethodChange);
-
-            // --- Initial Setup on Page Load ---
+        function resetSendButton() {
+            sendTxButton.disabled = false;
             updateSendButtonText();
-            sendTxButton.disabled = true;
-            estimateGasButton.disabled = true;
+        }
+        
+        // --- Event Listeners ---
+        connectButton.addEventListener('click', () => web3Modal.open());
+        disconnectButton.addEventListener('click', () => web3Modal.disconnect());
+        sendTxButton.addEventListener('click', handleSendTransaction);
+        estimateGasButton.addEventListener('click', estimateGasFee);
+        paymentMethodSelect.addEventListener('change', handlePaymentMethodChange);
 
-            if (typeof window.ethereum !== 'undefined') {
-                window.ethereum.on('accountsChanged', () => disconnectWallet());
-                window.ethereum.on('chainChanged', () => disconnectWallet());
-            }
-        };
+        // --- Initial Setup on Page Load ---
+        initializeWeb3Modal();
+        updateSendButtonText();
+        sendTxButton.disabled = true;
+        estimateGasButton.disabled = true;
     </script>
 </body>
 </html>
+
