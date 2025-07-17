@@ -14,6 +14,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #0d0c22; /* Dark purple-blue background */
         }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
@@ -22,13 +23,10 @@
         .status-dot-pulse {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        /* Styling for the toggle switch */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #4f46e5;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #4f46e5;
+        .card-bg {
+            background-color: rgba(23, 22, 49, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
@@ -36,14 +34,14 @@
 
     <div class="w-full max-w-2xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-white">Direct Contract Interaction</h1>
-            <p class="text-gray-400 mt-2">With Web3Modal, Gas Estimation, and ERC20 Token support.</p>
+            <h1 class="text-4xl md:text-5xl font-bold text-white tracking-wider">Direct Contract Interaction</h1>
+            <p class="text-pink-400 mt-2 text-lg">Execute transactions with precision and speed.</p>
         </header>
 
         <!-- Main Application -->
         <div class="space-y-6">
             <!-- Step 1: Connect Wallet -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="card-bg p-6 rounded-xl shadow-lg">
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-semibold text-white">Step 1: Connect Your Wallet</h2>
                     <div id="connection-status" class="flex items-center space-x-2">
@@ -54,41 +52,41 @@
 
                 <!-- Web3Modal Connect Button -->
                 <div id="connectWrapper">
-                    <button id="connectButton" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">
+                    <button id="connectButton" class="mt-4 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg shadow-pink-500/20">
                         Connect Wallet
                     </button>
                 </div>
                 
                 <div id="wallet-info" class="mt-4 text-center text-sm text-gray-400 hidden">
-                    <p>Address: <span id="wallet-address" class="font-mono text-indigo-400"></span></p>
-                    <p>Network: <span id="network-name" class="font-mono text-indigo-400"></span></p>
+                    <p>Address: <span id="wallet-address" class="font-mono text-cyan-400"></span></p>
+                    <p>Network: <span id="network-name" class="font-mono text-cyan-400"></span></p>
                     <button id="disconnectButton" class="mt-2 text-sm text-red-400 hover:text-red-300 underline">Disconnect</button>
                 </div>
             </div>
 
             <!-- Step 2: Contract Details -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="card-bg p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-semibold text-white">Step 2: Minting Contract Details</h2>
                 <div class="mt-4 space-y-4">
                     <div>
                         <label for="contractAddress" class="block text-sm font-medium text-gray-300">Minting Contract Address</label>
-                        <input type="text" id="contractAddress" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="0x...">
+                        <input type="text" id="contractAddress" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0x...">
                     </div>
                     <div>
                         <label for="contractAbi" class="block text-sm font-medium text-gray-300">Minting Contract ABI</label>
-                        <textarea id="contractAbi" rows="6" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder='[{"inputs":[],"name":"mint",...}]'></textarea>
+                        <textarea id="contractAbi" rows="6" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder='[{"inputs":[],"name":"mint",...}]'></textarea>
                     </div>
                 </div>
             </div>
 
             <!-- Step 3: Transaction -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="card-bg p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-semibold text-white">Step 3: Build & Send Transaction</h2>
                 
                 <!-- Payment Method -->
                 <div class="mt-4">
                     <label class="block text-sm font-medium text-gray-300 mb-2">Payment Method</label>
-                    <select id="paymentMethod" class="w-full bg-gray-900 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <select id="paymentMethod" class="w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500">
                         <option value="native">Native Coin (ETH, MATIC, etc.)</option>
                         <option value="erc20">ERC20 Token (USDT, USDC, etc.)</option>
                     </select>
@@ -98,7 +96,7 @@
                 <div id="nativePaymentFields" class="mt-4 space-y-4">
                     <div>
                         <label for="payableValue" class="block text-sm font-medium text-gray-300">Value to Send</label>
-                        <input type="text" id="payableValue" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="0.1">
+                        <input type="text" id="payableValue" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0.1">
                     </div>
                 </div>
 
@@ -106,42 +104,42 @@
                 <div id="erc20PaymentFields" class="hidden mt-4 space-y-4">
                     <div>
                         <label for="tokenAddress" class="block text-sm font-medium text-gray-300">Token Contract Address</label>
-                        <input type="text" id="tokenAddress" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="0x... (e.g., USDT address)">
+                        <input type="text" id="tokenAddress" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0x... (e.g., USDT address)">
                     </div>
                     <div>
                         <label for="tokenAmount" class="block text-sm font-medium text-gray-300">Token Amount</label>
-                        <input type="text" id="tokenAmount" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., 100">
+                        <input type="text" id="tokenAmount" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="e.g., 100">
                     </div>
                 </div>
 
                 <div class="mt-4 space-y-4">
                      <div>
                         <label for="functionName" class="block text-sm font-medium text-gray-300">Function Name</label>
-                        <input type="text" id="functionName" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., mint, buyTokens">
+                        <input type="text" id="functionName" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="e.g., mint, buyTokens">
                     </div>
                     <div>
                         <label for="functionArgs" class="block text-sm font-medium text-gray-300">Function Arguments (comma-separated)</label>
-                        <input type="text" id="functionArgs" class="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="1, 0xAddress, ... (leave empty if none)">
+                        <input type="text" id="functionArgs" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="1, 0xAddress, ... (leave empty if none)">
                     </div>
                 </div>
 
                 <!-- Gas Estimation -->
                 <div class="mt-6 flex items-center justify-between bg-gray-900/50 p-3 rounded-lg">
                     <div id="gasEstimateResult" class="text-sm text-gray-400">Fill details to estimate gas...</div>
-                    <button id="estimateGasButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+                    <button id="estimateGasButton" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors duration-300 shadow-lg shadow-cyan-500/20 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
                         Estimate Gas
                     </button>
                 </div>
 
-                <button id="sendTxButton" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed">
+                <button id="sendTxButton" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-green-500/20 disabled:bg-gray-600 disabled:cursor-not-allowed">
                     Send Transaction
                 </button>
             </div>
             
             <!-- Logs -->
-            <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="card-bg p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-semibold text-white">Logs & Status</h2>
-                <div id="logArea" class="mt-4 bg-gray-900 rounded-md p-4 h-48 overflow-y-auto font-mono text-sm text-gray-400">
+                <div id="logArea" class="mt-4 bg-gray-900/50 rounded-md p-4 h-48 overflow-y-auto font-mono text-sm text-gray-400">
                     <p>Awaiting connection...</p>
                 </div>
             </div>
@@ -337,7 +335,7 @@
                 log('Sending transaction to public mempool...');
                 const tx = await contract[functionNameInput.value](...args, txOptions);
                 const explorerUrl = getExplorerUrl(network);
-                log(`Transaction sent! Hash: <a href="${explorerUrl}/tx/${tx.hash}" target="_blank" class="text-indigo-400 hover:underline">${tx.hash}</a>`, 'success');
+                log(`Transaction sent! Hash: <a href="${explorerUrl}/tx/${tx.hash}" target="_blank" class="text-pink-400 hover:underline">${tx.hash}</a>`, 'success');
                 await tx.wait();
                 log('Transaction confirmed!', 'success');
             } catch (error) {
@@ -376,7 +374,7 @@
                 if (currentAllowance.lt(amountToApprove)) {
                     log('Allowance is insufficient. Sending approval transaction...');
                     const approveTx = await tokenContract.approve(spenderAddress, amountToApprove);
-                    log(`Approval transaction sent! Hash: <a href="${explorerUrl}/tx/${approveTx.hash}" target="_blank" class="text-indigo-400 hover:underline">${approveTx.hash}</a>`, 'success');
+                    log(`Approval transaction sent! Hash: <a href="${explorerUrl}/tx/${approveTx.hash}" target="_blank" class="text-pink-400 hover:underline">${approveTx.hash}</a>`, 'success');
                     await approveTx.wait();
                     log('Approval confirmed!', 'success');
                 } else {
@@ -391,7 +389,7 @@
                  }
                 
                 const mintTx = await contract[functionNameInput.value](...args, txOptions);
-                log(`Mint transaction sent! Hash: <a href="${explorerUrl}/tx/${mintTx.hash}" target="_blank" class="text-indigo-400 hover:underline">${mintTx.hash}</a>`, 'success');
+                log(`Mint transaction sent! Hash: <a href="${explorerUrl}/tx/${mintTx.hash}" target="_blank" class="text-pink-400 hover:underline">${mintTx.hash}</a>`, 'success');
                 await mintTx.wait();
                 log('Mint transaction confirmed!', 'success');
 
