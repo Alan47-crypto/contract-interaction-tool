@@ -324,6 +324,38 @@
     }
 
     // ==== Provider lifecycle ====
+    async function connectInjected() {
+      if (!window.ethereum) throw new Error('No injected wallet detected (MetaMask/Rabby/etc).')
+      provider = new ethers.BrowserProvider(window.ethereum, 'any')
+      await provider.send('eth_requestAccounts', [])
+      signer = await provider.getSigner()
+      const addr = await signer.getAddress()
+      const net = await provider.getNetwork()
+      userAddress = addr; network = net
+      const chain = CHAIN_MAP.get(Number(net.chainId))
+      updateConnectionStatus(true, addr, chain ? chain.name : `Chain ${net.chainId}`)
+      safeLog(`Injected wallet connected on ${chain ? chain.name : net.chainId}`, 'success')
+      // listen for changes
+      if (window.ethereum && window.ethereum.on) {
+        window.ethereum.on('accountsChanged', () => handleInjectedChanged('accountsChanged'))
+        window.ethereum.on('chainChanged', () => handleInjectedChanged('chainChanged'))
+        window.ethereum.on('disconnect', () => disconnectWallet())
+      }
+    }
+    async function handleInjectedChanged(label) {
+      try {
+        safeLog(`Injected provider event: ${label}`)
+        signer = await provider.getSigner()
+        userAddress = await signer.getAddress()
+        network = await provider.getNetwork()
+        const chain = CHAIN_MAP.get(Number(network.chainId))
+        updateConnectionStatus(true, userAddress, chain ? chain.name : `Chain ${network.chainId}`)
+      } catch (e) {
+        safeLog(e.message || String(e), 'error')
+      }
+    }
+
+    // ==== Provider lifecycle ====
     async function handleProviderUpdate({ provider: newProvider, address, chainId, isConnected }) {
       if (isConnected && address && chainId) {
         provider = new ethers.BrowserProvider(newProvider)
@@ -570,6 +602,36 @@
 
     // ==== Events ====
     connectButton.addEventListener('click', async () => {
+      safeLog('Connect button clicked')
+      try {
+        if (!web3Modal || typeof web3Modal.open !== 'function') {
+          initializeWeb3Modal()
+          safeLog('Re-initialized Web3Modal')
+        }
+        if (web3Modal && typeof web3Modal.open === 'function') {
+          await web3Modal.open()
+          safeLog('web3Modal.open() invoked')
+          // If no provider callback fires within 2s, fall back to injected
+          setTimeout(() => {
+            if (!signer) {
+              safeLog('No provider event after open(); trying injected fallback...', 'error')
+              connectInjected().catch(e => safeLog(e.message || String(e), 'error'))
+            }
+          }, 2000)
+        } else {
+          safeLog('Web3Modal not ready. Trying injected fallback...', 'error')
+          await connectInjected()
+        }
+      } catch (e) {
+        console.error('open error:', e)
+        safeLog(e.message || String(e), 'error')
+        // last resort injected
+        if (window.ethereum) {
+          safeLog('Attempting injected fallback...')
+          connectInjected().catch(err => safeLog(err.message || String(err), 'error'))
+        }
+      }
+    }) => {
       try {
         if (!web3Modal || typeof web3Modal.open !== 'function') {
           initializeWeb3Modal()
