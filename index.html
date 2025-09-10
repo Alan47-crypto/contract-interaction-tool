@@ -265,6 +265,44 @@
       walletSelectWrap.classList.remove('hidden')
       const opt = document.createElement('option')
       opt.value = String(discovered.length - 1)
+      opt.textContent = `${info.name} (${info.rdns || info.uuid?.slice(0,8) || 'wallet'})`
+      walletSelect.appendChild(opt)
+    })
+    window.dispatchEvent(new Event('eip6963:requestProvider'))
+
+    function pickFromWindowEthereum() {
+      const eth = window.ethereum
+      if (!eth) return null
+      // Multiple providers pattern (MetaMask, Coinbase, Rabby)
+      const list = Array.isArray(eth.providers) ? eth.providers : [eth]
+      // Preference order
+      const score = (p) => (p.isMetaMask?5:0) + (p.isRabby?4:0) + (p.isCoinbaseWallet?3:0) + (p.isOkxWallet?2:0)
+      const best = list.slice().sort((a,b)=>score(b)-score(a))[0]
+      return best || null
+    }
+
+    function pickFromDiscovered() {
+      if (!discovered.length) return null
+      // If user chose an option
+      if (walletSelect.options.length) {
+        const idx = Number(walletSelect.value || 0)
+        return discovered[idx]?.provider || null
+      }
+      // Otherwise, prefer common wallets by rdns
+      const order = ['io.metamask','com.coinbase.wallet','com.debank','com.okex.wallet','com.rabby']
+      for (const name of order) {
+        const hit = discovered.find(d => (d.info?.rdns||'').includes(name))
+        if (hit) return hit.provider
+      }
+      return discovered[0].provider
+    }
+    const discovered = []
+    window.addEventListener('eip6963:announceProvider', (event) => {
+      const { info, provider } = event.detail
+      discovered.push({ info, provider })
+      walletSelectWrap.classList.remove('hidden')
+      const opt = document.createElement('option')
+      opt.value = String(discovered.length - 1)
       opt.textContent = `${info.name} (${info.uuid.slice(0,8)})`
       walletSelect.appendChild(opt)
     })
@@ -273,10 +311,35 @@
     // ==== Connect flow (Injected Only) ====
     async function connectInjected() {
       try {
-        if (discovered.length && walletSelect.options.length) {
-          const idx = Number(walletSelect.value || 0)
-          injectedProvider = discovered[idx]?.provider
+        // Choose best available provider (EIP-6963 first, then window.ethereum)
+        injectedProvider = pickFromDiscovered() || pickFromWindowEthereum()
+        if (!injectedProvider) {
+          safeLog('No injected wallet detected. Install MetaMask/Rabby/Coinbase extension and refresh.', 'error')
+          return
         }
+        // Request accounts using the raw provider first to ensure a popup
+        if (typeof injectedProvider.request === 'function') {
+          await injectedProvider.request({ method: 'eth_requestAccounts', params: [] })
+        }
+        provider = new ethers.BrowserProvider(injectedProvider, 'any')
+        signer = await provider.getSigner()
+        const addr = await signer.getAddress()
+        const net = await provider.getNetwork()
+        userAddress = addr; network = net
+        const c = CHAIN_MAP.get(Number(net.chainId))
+        updateConnectionStatus(true, addr, c ? c.name : `Chain ${net.chainId}`)
+        safeLog(`Injected wallet connected on ${c ? c.name : net.chainId}`, 'success')
+
+        if (injectedProvider.on) {
+          injectedProvider.on('accountsChanged', handleInjectedChanged)
+          injectedProvider.on('chainChanged', handleInjectedChanged)
+          injectedProvider.on('disconnect', () => disconnectWallet())
+        }
+      } catch (e) {
+        safeLog(e.message || String(e), 'error')
+        throw e
+      }
+    }
         if (!injectedProvider) injectedProvider = window.ethereum
         if (!injectedProvider) throw new Error('No injected wallet detected (MetaMask/Rabby/Coinbase ext).')
 
