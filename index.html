@@ -317,6 +317,47 @@
           safeLog('No injected wallet detected. Install MetaMask/Rabby/Coinbase extension and refresh.', 'error')
           return
         }
+        // Check if already connected
+        let accounts = []
+        try {
+          if (typeof injectedProvider.request === 'function') {
+            accounts = await injectedProvider.request({ method: 'eth_accounts' })
+          }
+        } catch {}
+        // Request accounts using the raw provider first to ensure a popup
+        if (!accounts || accounts.length === 0) {
+          try {
+            await injectedProvider.request({ method: 'eth_requestAccounts', params: [] })
+          } catch (reqErr) {
+            // -32002: request already pending (MetaMask)
+            if (reqErr && (reqErr.code === -32002 || /already pending/i.test(reqErr.message||''))) {
+              safeLog('A connection request is already pending in your wallet. Open the wallet extension and approve it.', 'error')
+              throw reqErr
+            }
+            // User rejected or provider blocked the popup
+            throw reqErr
+          }
+        }
+        provider = new ethers.BrowserProvider(injectedProvider, 'any')
+        signer = await provider.getSigner()
+        const addr = await signer.getAddress()
+        const net = await provider.getNetwork()
+        userAddress = addr; network = net
+        const c = CHAIN_MAP.get(Number(net.chainId))
+        updateConnectionStatus(true, addr, c ? c.name : `Chain ${net.chainId}`)
+        const meta = injectedProvider.isMetaMask ? 'MetaMask' : injectedProvider.isRabby ? 'Rabby' : injectedProvider.isCoinbaseWallet ? 'Coinbase Wallet' : 'Injected'
+        safeLog(`Connected via ${meta} on ${c ? c.name : net.chainId}`, 'success')
+
+        if (injectedProvider.on) {
+          injectedProvider.on('accountsChanged', handleInjectedChanged)
+          injectedProvider.on('chainChanged', handleInjectedChanged)
+          injectedProvider.on('disconnect', () => disconnectWallet())
+        }
+      } catch (e) {
+        safeLog(e.message || String(e), 'error')
+        throw e
+      }
+    }
         // Request accounts using the raw provider first to ensure a popup
         if (typeof injectedProvider.request === 'function') {
           await injectedProvider.request({ method: 'eth_requestAccounts', params: [] })
