@@ -1,523 +1,564 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Contract Interaction Tool</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Ethers.js for blockchain interaction from Cloudflare CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d0c22; /* Dark purple-blue background */
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .status-dot-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        .card-bg {
-            background-color: rgba(23, 22, 49, 0.75);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effect */
-        }
-        
-        /* New hover effect for a subtle glow */
-        .card-bg:hover {
-            border-color: rgba(233, 30, 99, 0.8); /* Pink border on hover */
-            box-shadow: 0 0 20px rgba(233, 30, 99, 0.2); /* Subtle pink glow on hover */
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Direct Contract Interaction — v6</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:'Inter',sans-serif;background:#0d0c22}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .status-dot-pulse{animation:pulse 2s cubic-bezier(0.4,0,0.6,1) infinite}
+    .card-bg{background:rgba(23,22,49,.75);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);transition:border-color .3s ease,box-shadow .3s ease}
+    .card-bg:hover{border-color:rgba(233,30,99,.8);box-shadow:0 0 20px rgba(233,30,99,.2)}
+  </style>
 </head>
 <body class="bg-gray-900 text-gray-200 flex flex-col items-center min-h-screen p-4 md:p-8">
+  <div class="w-full max-w-2xl mx-auto">
+    <header class="text-center mb-8">
+      <h1 class="text-4xl md:text-5xl font-bold text-white tracking-wider">Direct Contract Interaction</h1>
+      <p class="text-pink-400 mt-2 text-lg">Ethers v6 · EIP-1559 · Multi-chain</p>
+    </header>
 
-    <div class="w-full max-w-2xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-white tracking-wider">Direct Contract Interaction</h1>
-            <p class="text-pink-400 mt-2 text-lg">Execute transactions with precision and speed.</p>
-        </header>
-
-        <!-- Main Application -->
-        <div class="space-y-6">
-            <!-- Step 1: Connect Wallet -->
-            <div class="card-bg p-6 rounded-xl shadow-lg">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-semibold text-white">Step 1: Connect Your Wallet</h2>
-                    <div id="connection-status" class="flex items-center space-x-2">
-                        <div id="status-dot" class="w-3 h-3 bg-red-500 rounded-full"></div>
-                        <span id="status-text" class="text-gray-400">Not Connected</span>
-                    </div>
-                </div>
-
-                <!-- Web3Modal Connect Button -->
-                <div id="connectWrapper">
-                    <button id="connectButton" class="mt-4 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg shadow-pink-500/20">
-                        Connect Wallet
-                    </button>
-                </div>
-                
-                <div id="wallet-info" class="mt-4 text-center text-sm text-gray-400 hidden">
-                    <p>Address: <span id="wallet-address" class="font-mono text-cyan-400"></span></p>
-                    <p>Network: <span id="network-name" class="font-mono text-cyan-400"></span></p>
-                    <button id="disconnectButton" class="mt-2 text-sm text-red-400 hover:text-red-300 underline">Disconnect</button>
-                </div>
-            </div>
-
-            <!-- Step 2: Contract Details -->
-            <div class="card-bg p-6 rounded-xl shadow-lg">
-                <h2 class="text-xl font-semibold text-white">Step 2: Minting Contract Details</h2>
-                <div class="mt-4 space-y-4">
-                    <div>
-                        <label for="contractAddress" class="block text-sm font-medium text-gray-300">Minting Contract Address</label>
-                        <input type="text" id="contractAddress" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0x...">
-                    </div>
-                    <div>
-                        <label for="contractAbi" class="block text-sm font-medium text-gray-300">Minting Contract ABI</label>
-                        <textarea id="contractAbi" rows="6" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder='[{"inputs":[],"name":"mint",...}]'></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3: Transaction -->
-            <div class="card-bg p-6 rounded-xl shadow-lg">
-                <h2 class="text-xl font-semibold text-white">Step 3: Build & Send Transaction</h2>
-                
-                <!-- Payment Method -->
-                <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Payment Method</label>
-                    <select id="paymentMethod" class="w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500">
-                        <option value="native">Native Coin (ETH, MATIC, etc.)</option>
-                        <option value="erc20">ERC20 Token (USDT, USDC, etc.)</option>
-                    </select>
-                </div>
-
-                <!-- Native Coin Payment Fields -->
-                <div id="nativePaymentFields" class="mt-4 space-y-4">
-                    <div>
-                        <label for="payableValue" class="block text-sm font-medium text-gray-300">Value to Send</label>
-                        <input type="text" id="payableValue" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0.1">
-                    </div>
-                </div>
-
-                <!-- ERC20 Token Payment Fields -->
-                <div id="erc20PaymentFields" class="hidden mt-4 space-y-4">
-                    <div>
-                        <label for="tokenAddress" class="block text-sm font-medium text-gray-300">Token Contract Address</label>
-                        <input type="text" id="tokenAddress" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0x... (e.g., USDT address)">
-                    </div>
-                    <div>
-                        <label for="tokenAmount" class="block text-sm font-medium text-gray-300">Token Amount</label>
-                        <input type="text" id="tokenAmount" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="e.g., 100">
-                    </div>
-                </div>
-
-                <div class="mt-4 space-y-4">
-                     <div>
-                        <label for="functionName" class="block text-sm font-medium text-gray-300">Function Name</label>
-                        <input type="text" id="functionName" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="e.g., mint, buyTokens">
-                    </div>
-                    <div>
-                        <label for="functionArgs" class="block text-sm font-medium text-gray-300">Function Arguments (comma-separated)</label>
-                        <input type="text" id="functionArgs" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="1, 0xAddress, ... (leave empty if none)">
-                    </div>
-                </div>
-
-                <!-- Gas Estimation -->
-                <div class="mt-6 flex items-center justify-between bg-gray-900/50 p-3 rounded-lg">
-                    <div id="gasEstimateResult" class="text-sm text-gray-400">Fill details to estimate gas...</div>
-                    <button id="estimateGasButton" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors duration-300 shadow-lg shadow-cyan-500/20 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
-                        Estimate Gas
-                    </button>
-                </div>
-
-                <button id="sendTxButton" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-green-500/20 disabled:bg-gray-600 disabled:cursor-not-allowed">
-                    Send Transaction
-                </button>
-            </div>
-            
-            <!-- Logs -->
-            <div class="card-bg p-6 rounded-xl shadow-lg">
-                <h2 class="text-xl font-semibold text-white">Logs & Status</h2>
-                <div id="logArea" class="mt-4 bg-gray-900/50 rounded-md p-4 h-48 overflow-y-auto font-mono text-sm text-gray-400">
-                    <p>Awaiting connection...</p>
-                </div>
-            </div>
+    <div class="space-y-6">
+      <!-- Step 1: Connect Wallet -->
+      <div class="card-bg p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold text-white">Step 1: Connect Your Wallet</h2>
+          <div id="connection-status" class="flex items-center space-x-2">
+            <div id="status-dot" class="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span id="status-text" class="text-gray-400">Not Connected</span>
+          </div>
         </div>
+        <div id="connectWrapper">
+          <button id="connectButton" class="mt-4 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg shadow-pink-500/20">Connect Wallet</button>
+        </div>
+        <div id="wallet-info" class="mt-4 text-sm text-gray-400 hidden">
+          <p>Address: <span id="wallet-address" class="font-mono text-cyan-400"></span></p>
+          <p>Network: <span id="network-name" class="font-mono text-cyan-400"></span></p>
+          <button id="disconnectButton" class="mt-2 text-sm text-red-400 hover:text-red-300 underline">Disconnect</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Chain & Contract Details -->
+      <div class="card-bg p-6 rounded-xl shadow-lg">
+        <h2 class="text-xl font-semibold text-white">Step 2: Chain & Contract Details</h2>
+        <div class="mt-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Target Chain</label>
+            <select id="targetChain" class="w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500"></select>
+            <p class="text-xs text-gray-500 mt-1">We'll prompt your wallet to switch before estimation/sending.</p>
+          </div>
+          <div>
+            <label for="contractAddress" class="block text-sm font-medium text-gray-300">Mint/Claim Contract Address</label>
+            <input id="contractAddress" type="text" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0x..." />
+          </div>
+          <div>
+            <label for="contractAbi" class="block text-sm font-medium text-gray-300">Contract ABI (JSON)</label>
+            <textarea id="contractAbi" rows="6" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder='[{"type":"function","name":"mint","stateMutability":"payable","inputs":[{"name":"qty","type":"uint256"}],"outputs":[]}]'></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Build & Send Tx -->
+      <div class="card-bg p-6 rounded-xl shadow-lg">
+        <h2 class="text-xl font-semibold text-white">Step 3: Build & Send Transaction</h2>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-300 mb-2">Payment Method</label>
+          <select id="paymentMethod" class="w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500">
+            <option value="native">Native Coin (ETH, MATIC, etc.)</option>
+            <option value="erc20">ERC20 Token (USDT, USDC, etc.)</option>
+          </select>
+        </div>
+
+        <!-- Native fields -->
+        <div id="nativePaymentFields" class="mt-4 space-y-4">
+          <div>
+            <label for="payableValue" class="block text-sm font-medium text-gray-300">Value to Send (ETH)</label>
+            <input id="payableValue" type="text" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0.1" />
+          </div>
+        </div>
+
+        <!-- ERC20 fields -->
+        <div id="erc20PaymentFields" class="hidden mt-4 space-y-4">
+          <div>
+            <label for="tokenAddress" class="block text-sm font-medium text-gray-300">Token Contract Address</label>
+            <input id="tokenAddress" type="text" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="0x... (USDT/USDC etc)" />
+          </div>
+          <div>
+            <label for="tokenAmount" class="block text-sm font-medium text-gray-300">Token Amount (human units)</label>
+            <input id="tokenAmount" type="text" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="e.g., 100" />
+          </div>
+          <div>
+            <label for="customSpender" class="block text-sm font-medium text-gray-300">Custom Spender (optional)</label>
+            <input id="customSpender" type="text" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="Router/processor address if not the mint contract" />
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-4">
+          <div>
+            <label for="functionName" class="block text-sm font-medium text-gray-300">Function Name</label>
+            <input id="functionName" type="text" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="mint, claim, buy" />
+          </div>
+          <div>
+            <div class="flex items-center justify-between">
+              <label for="functionArgs" class="block text-sm font-medium text-gray-300">Function Arguments (JSON array)</label>
+              <span class="text-xs text-gray-400">Example: ["0xAbC...", 2, true, [1,2,3]]</span>
+            </div>
+            <input id="functionArgs" type="text" class="mt-1 block w-full bg-gray-900/50 border border-gray-700 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-pink-500 focus:border-pink-500" placeholder="[] if none" />
+          </div>
+        </div>
+
+        <!-- Gas Estimation -->
+        <div class="mt-6 flex items-center justify-between bg-gray-900/50 p-3 rounded-lg">
+          <div id="gasEstimateResult" class="text-sm text-gray-400">Fill details to estimate gas...</div>
+          <button id="estimateGasButton" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors duration-300 shadow-lg shadow-cyan-500/20 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>Estimate Gas</button>
+        </div>
+
+        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button id="sendTxButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-green-500/20 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>Send Transaction</button>
+          <button id="simulateButton" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg shadow-amber-500/20 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>Simulate (static call)</button>
+        </div>
+      </div>
+
+      <!-- Logs -->
+      <div class="card-bg p-6 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold text-white">Logs & Status</h2>
+          <button id="clearLogs" class="text-xs text-gray-400 hover:text-gray-200 underline">Clear</button>
+        </div>
+        <div id="logArea" class="mt-4 bg-gray-900/50 rounded-md p-4 h-60 overflow-y-auto font-mono text-sm text-gray-400"><p>Awaiting connection...</p></div>
+      </div>
     </div>
+  </div>
 
-    <footer class="text-center mt-8 mb-4">
-        <p class="text-sm text-gray-500">
-            Created by <a href="https://x.com/0xKangLiu" target="_blank" rel="noopener noreferrer" class="text-pink-400 hover:underline">Alan</a>
-        </p>
-    </footer>
+  <footer class="text-center mt-8 mb-4">
+    <p class="text-sm text-gray-500">Created by <a href="https://x.com/0xKangLiu" target="_blank" rel="noopener noreferrer" class="text-pink-400 hover:underline">Alan</a></p>
+  </footer>
 
-    <script type="module">
-        import { createWeb3Modal, defaultConfig } from 'https://esm.sh/@web3modal/ethers@4'
+  <!-- Main app (ESM) -->
+  <script type="module">
+    import { ethers } from 'https://esm.sh/ethers@6.11.1'
+    import { createWeb3Modal, defaultConfig } from 'https://esm.sh/@web3modal/ethers@4'
 
-        // --- DOM Element References ---
-        const connectButton = document.getElementById('connectButton');
-        const disconnectButton = document.getElementById('disconnectButton');
-        const sendTxButton = document.getElementById('sendTxButton');
-        const estimateGasButton = document.getElementById('estimateGasButton');
-        const statusDot = document.getElementById('status-dot');
-        const statusText = document.getElementById('status-text');
-        const walletInfoDiv = document.getElementById('wallet-info');
-        const walletAddressSpan = document.getElementById('wallet-address');
-        const networkNameSpan = document.getElementById('network-name');
-        const logArea = document.getElementById('logArea');
-        const gasEstimateResult = document.getElementById('gasEstimateResult');
-        
-        const contractAddressInput = document.getElementById('contractAddress');
-        const contractAbiInput = document.getElementById('contractAbi');
-        const functionNameInput = document.getElementById('functionName');
-        const functionArgsInput = document.getElementById('functionArgs');
-        
-        const paymentMethodSelect = document.getElementById('paymentMethod');
-        const nativePaymentFields = document.getElementById('nativePaymentFields');
-        const erc20PaymentFields = document.getElementById('erc20PaymentFields');
-        const payableValueInput = document.getElementById('payableValue');
-        const tokenAddressInput = document.getElementById('tokenAddress');
-        const tokenAmountInput = document.getElementById('tokenAmount');
+    // ==== DOM refs ====
+    const connectButton = document.getElementById('connectButton')
+    const disconnectButton = document.getElementById('disconnectButton')
+    const sendTxButton = document.getElementById('sendTxButton')
+    const estimateGasButton = document.getElementById('estimateGasButton')
+    const simulateButton = document.getElementById('simulateButton')
+    const statusDot = document.getElementById('status-dot')
+    const statusText = document.getElementById('status-text')
+    const walletInfoDiv = document.getElementById('wallet-info')
+    const walletAddressSpan = document.getElementById('wallet-address')
+    const networkNameSpan = document.getElementById('network-name')
+    const logArea = document.getElementById('logArea')
+    const gasEstimateResult = document.getElementById('gasEstimateResult')
+    const clearLogsBtn = document.getElementById('clearLogs')
 
-        // --- Ethers.js State Variables ---
-        let provider;
-        let signer;
-        let userAddress;
-        let network;
-        let web3Modal;
+    const contractAddressInput = document.getElementById('contractAddress')
+    const contractAbiInput = document.getElementById('contractAbi')
+    const functionNameInput = document.getElementById('functionName')
+    const functionArgsInput = document.getElementById('functionArgs')
 
-        // --- ERC20 ABI for standard functions ---
-        const ERC20_ABI = [
-            "function approve(address spender, uint256 amount) public returns (bool)",
-            "function allowance(address owner, address spender) public view returns (uint256)",
-            "function decimals() public view returns (uint8)"
-        ];
+    const paymentMethodSelect = document.getElementById('paymentMethod')
+    const nativePaymentFields = document.getElementById('nativePaymentFields')
+    const erc20PaymentFields = document.getElementById('erc20PaymentFields')
+    const payableValueInput = document.getElementById('payableValue')
+    const tokenAddressInput = document.getElementById('tokenAddress')
+    const tokenAmountInput = document.getElementById('tokenAmount')
+    const customSpenderInput = document.getElementById('customSpender')
 
-        // --- Web3Modal Configuration ---
-        // 1. Get projectId from https://dashboard.reown.com/
-        const projectId = 'cf1e4bdcd7c65571abab7ee24475047e'; 
+    const targetChainSelect = document.getElementById('targetChain')
 
-        const metadata = {
-            name: 'Direct Contract Interaction Tool',
-            description: 'A tool to interact directly with smart contracts.',
-            url: window.location.href,
-            icons: ['https://avatars.githubusercontent.com/u/37784886']
+    // ==== State ====
+    let provider // ethers.BrowserProvider
+    let signer   // ethers.Signer
+    let userAddress
+    let network  // ethers.Network
+    let web3Modal
+
+    // ==== Chains ====
+    const CHAINS = [
+      // Ethereum & L2s
+      { chainId: 1, name: 'Ethereum', currency: 'ETH', explorerUrl: 'https://etherscan.io', rpcUrl: 'https://cloudflare-eth.com' },
+      { chainId: 10, name: 'OP Mainnet', currency: 'ETH', explorerUrl: 'https://optimistic.etherscan.io', rpcUrl: 'https://mainnet.optimism.io' },
+      { chainId: 8453, name: 'Base', currency: 'ETH', explorerUrl: 'https://basescan.org', rpcUrl: 'https://mainnet.base.org' },
+      { chainId: 42161, name: 'Arbitrum One', currency: 'ETH', explorerUrl: 'https://arbiscan.io', rpcUrl: 'https://arb1.arbitrum.io/rpc' },
+      { chainId: 7777777, name: 'Zora', currency: 'ETH', explorerUrl: 'https://zorascan.xyz', rpcUrl: 'https://rpc.zora.energy' },
+      { chainId: 59144, name: 'Linea', currency: 'ETH', explorerUrl: 'https://lineascan.build', rpcUrl: 'https://rpc.linea.build' },
+      { chainId: 324, name: 'zkSync Era', currency: 'ETH', explorerUrl: 'https://explorer.zksync.io', rpcUrl: 'https://mainnet.era.zksync.io' },
+      // Alt L1s
+      { chainId: 56, name: 'BNB Chain', currency: 'BNB', explorerUrl: 'https://bscscan.com', rpcUrl: 'https://bsc-dataseed.binance.org' },
+      { chainId: 137, name: 'Polygon', currency: 'MATIC', explorerUrl: 'https://polygonscan.com', rpcUrl: 'https://polygon-rpc.com' },
+      { chainId: 43114, name: 'Avalanche', currency: 'AVAX', explorerUrl: 'https://snowtrace.io', rpcUrl: 'https://api.avax.network/ext/bc/C/rpc' },
+      { chainId: 250, name: 'Fantom', currency: 'FTM', explorerUrl: 'https://ftmscan.com', rpcUrl: 'https://rpc.ftm.tools' },
+      { chainId: 25, name: 'Cronos', currency: 'CRO', explorerUrl: 'https://cronoscan.com', rpcUrl: 'https://evm.cronos.org' },
+      { chainId: 100, name: 'Gnosis', currency: 'xDAI', explorerUrl: 'https://gnosisscan.io', rpcUrl: 'https://rpc.gnosischain.com' },
+      { chainId: 1284, name: 'Moonbeam', currency: 'GLMR', explorerUrl: 'https://moonscan.io', rpcUrl: 'https://rpc.api.moonbeam.network' },
+      { chainId: 1285, name: 'Moonriver', currency: 'MOVR', explorerUrl: 'https://moonriver.moonscan.io', rpcUrl: 'https://rpc.api.moonriver.moonbeam.network' },
+      // Testnets (modern)
+      { chainId: 11155111, name: 'Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.etherscan.io', rpcUrl: 'https://rpc.sepolia.org' },
+      { chainId: 84532, name: 'Base Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.basescan.org', rpcUrl: 'https://sepolia.base.org' },
+      { chainId: 421614, name: 'Arbitrum Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.arbiscan.io', rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc' },
+      { chainId: 11155420, name: 'OP Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia-optimism.etherscan.io', rpcUrl: 'https://sepolia.optimism.io' }
+    ]
+    const CHAIN_MAP = new Map(CHAINS.map(c => [c.chainId, c]))
+
+    // ==== ERC20 ABI (minimal) ====
+    const ERC20_ABI = [
+      'function approve(address spender, uint256 amount) returns (bool)',
+      'function allowance(address owner, address spender) view returns (uint256)',
+      'function decimals() view returns (uint8)'
+    ]
+
+    // ==== Web3Modal config ====
+    const projectId = 'cf1e4bdcd7c65571abab7ee24475047e' // replace with your own
+    const metadata = {
+      name: 'Direct Contract Interaction Tool',
+      description: 'Interact with smart contracts directly (ethers v6).',
+      url: window.location.origin,
+      icons: ['https://avatars.githubusercontent.com/u/37784886']
+    }
+
+    function initTargetChainOptions() {
+      for (const c of CHAINS) {
+        const opt = document.createElement('option')
+        opt.value = String(c.chainId)
+        opt.textContent = `${c.name} (id: ${c.chainId})`
+        targetChainSelect.appendChild(opt)
+      }
+      const saved = localStorage.getItem('dci.targetChain')
+      if (saved && CHAINS.find(c => String(c.chainId) === saved)) targetChainSelect.value = saved
+    }
+
+    function initializeWeb3Modal() {
+      if (!projectId) {
+        safeLog('Missing Web3Modal projectId. Get one at reown.com', 'error')
+        return
+      }
+      web3Modal = createWeb3Modal({
+        ethersConfig: defaultConfig({ metadata, enableEIP6963: true }),
+        chains: CHAINS,
+        projectId
+      })
+      web3Modal.subscribeProvider(handleProviderUpdate)
+    }
+
+    // ==== Utils: logs (safe) ====
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))
+    }
+    function safeLog(message, type='info') {
+      const now = new Date().toLocaleTimeString()
+      const color = type==='error' ? 'text-red-400' : type==='success' ? 'text-green-400' : 'text-gray-400'
+      const p = document.createElement('p')
+      const ts = document.createElement('span'); ts.className='text-gray-500'; ts.textContent=`${now}: `
+      const msg = document.createElement('span'); msg.className=color; msg.textContent = typeof message==='string'? message : JSON.stringify(message)
+      p.appendChild(ts); p.appendChild(msg)
+      logArea.appendChild(p)
+      trimLogs()
+      logArea.scrollTop = logArea.scrollHeight
+    }
+    function logLink(label, href) {
+      const p = document.createElement('p')
+      const ts = document.createElement('span'); ts.className='text-gray-500'; ts.textContent=`${new Date().toLocaleTimeString()}: `
+      const a = document.createElement('a'); a.className='text-pink-400 hover:underline'; a.href=href; a.target='_blank'; a.rel='noopener noreferrer'; a.textContent=label
+      p.appendChild(ts); p.appendChild(a); logArea.appendChild(p); trimLogs(); logArea.scrollTop = logArea.scrollHeight
+    }
+    function trimLogs() {
+      while (logArea.childNodes.length > 500) logArea.removeChild(logArea.firstChild)
+    }
+
+    function getExplorerUrl(net) {
+      if (!net) return 'https://etherscan.io'
+      const chain = CHAIN_MAP.get(Number(net.chainId)) || CHAIN_MAP.get(net.chainId)
+      return chain ? chain.explorerUrl : 'https://etherscan.io'
+    }
+    const ex = {
+      tx: (base, h) => `${base}/tx/${h}`,
+      addr: (base, a) => `${base}/address/${a}`
+    }
+
+    function updateConnectionStatus(isConnected, address='', networkLabel='') {
+      statusDot.classList.toggle('bg-red-500', !isConnected)
+      statusDot.classList.toggle('bg-green-500', isConnected)
+      statusDot.classList.toggle('status-dot-pulse', isConnected)
+      statusText.textContent = isConnected ? 'Connected' : 'Not Connected'
+      walletInfoDiv.classList.toggle('hidden', !isConnected)
+      connectButton.classList.toggle('hidden', isConnected)
+      sendTxButton.disabled = !isConnected
+      estimateGasButton.disabled = !isConnected
+      simulateButton.disabled = !isConnected
+      if (isConnected) {
+        walletAddressSpan.textContent = `${address.slice(0,6)}...${address.slice(-4)}`
+        networkNameSpan.textContent = networkLabel
+      }
+    }
+
+    // ==== Provider lifecycle ====
+    async function handleProviderUpdate({ provider: newProvider, address, chainId, isConnected }) {
+      if (isConnected && address && chainId) {
+        provider = new ethers.BrowserProvider(newProvider)
+        signer = await provider.getSigner()
+        network = await provider.getNetwork()
+        userAddress = address
+        const chain = CHAIN_MAP.get(Number(chainId))
+        updateConnectionStatus(true, address, chain ? chain.name : `Chain ${chainId}`)
+        safeLog(`Wallet connected on ${chain ? chain.name : chainId}.`, 'success')
+      } else {
+        disconnectWallet()
+      }
+    }
+    function disconnectWallet() {
+      provider = null; signer = null; userAddress = null; network = null
+      updateConnectionStatus(false)
+      safeLog('Wallet disconnected.')
+    }
+
+    // ==== Pay method toggling ====
+    function handlePaymentMethodChange() {
+      const isNative = paymentMethodSelect.value === 'native'
+      nativePaymentFields.classList.toggle('hidden', !isNative)
+      erc20PaymentFields.classList.toggle('hidden', isNative)
+      updateSendButtonText()
+    }
+    function updateSendButtonText() {
+      const isNative = paymentMethodSelect.value === 'native'
+      sendTxButton.textContent = isNative ? 'Send Transaction' : 'Approve & Mint'
+    }
+
+    // ==== Chain switch ====
+    async function ensureTargetChain() {
+      const wantId = Number(targetChainSelect.value)
+      if (!window.ethereum) return
+      const current = await signer.getChainId()
+      if (Number(current) === wantId) return
+      try {
+        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + wantId.toString(16) }] })
+        network = await provider.getNetwork()
+      } catch (e) {
+        throw new Error('User rejected chain switch or chain not added in wallet.')
+      }
+    }
+
+    // ==== Inputs & validation ====
+    function parseArgsJSON(input) {
+      const s = (input || '').trim()
+      if (!s) return []
+      try { return JSON.parse(s) } catch { throw new Error('Invalid args JSON. Example: ["0xAddr", 2, true]') }
+    }
+    function isAddress(v) {
+      try { return ethers.isAddress(v) } catch { return false }
+    }
+
+    function loadPersisted() {
+      const data = JSON.parse(localStorage.getItem('dci.form') || '{}')
+      if (!data) return
+      for (const [k,v] of Object.entries(data)) {
+        const el = document.getElementById(k)
+        if (el && typeof v === 'string') el.value = v
+      }
+    }
+    function persistForm() {
+      const keys = ['contractAddress','contractAbi','functionName','functionArgs','paymentMethod','payableValue','tokenAddress','tokenAmount','customSpender']
+      const obj = {}
+      for (const k of keys) { const el = document.getElementById(k); if (el) obj[k] = el.value }
+      localStorage.setItem('dci.form', JSON.stringify(obj))
+      localStorage.setItem('dci.targetChain', String(targetChainSelect.value))
+    }
+
+    function getPrepared() {
+      const contractAddress = contractAddressInput.value.trim()
+      const abiString = contractAbiInput.value.trim()
+      const functionName = functionNameInput.value.trim()
+      const args = parseArgsJSON(functionArgsInput.value)
+      if (!isAddress(contractAddress)) throw new Error('Invalid contract address')
+      if (!functionName) throw new Error('Function name is required')
+      let abi
+      try { abi = JSON.parse(abiString) } catch { throw new Error('Invalid ABI JSON') }
+      const contract = new ethers.Contract(contractAddress, abi, signer)
+      const txOptions = {}
+      if (paymentMethodSelect.value === 'native' && payableValueInput.value) {
+        txOptions.value = ethers.parseEther(payableValueInput.value)
+      }
+      if (paymentMethodSelect.value !== 'native' && 'value' in txOptions) delete txOptions.value
+      return { contract, functionName, args, txOptions }
+    }
+
+    async function withEip1559Overrides(txOptions) {
+      const fee = await provider.getFeeData()
+      if (fee.maxFeePerGas && fee.maxPriorityFeePerGas) {
+        txOptions.maxFeePerGas = fee.maxFeePerGas
+        txOptions.maxPriorityFeePerGas = fee.maxPriorityFeePerGas
+      }
+      return txOptions
+    }
+
+    // ==== Actions ====
+    async function simulateCall() {
+      try {
+        await ensureTargetChain()
+        const { contract, functionName, args, txOptions } = getPrepared()
+        await withEip1559Overrides(txOptions)
+        // v6 static call
+        await contract[functionName].staticCall(...args, txOptions)
+        safeLog('Simulation successful: call would succeed.', 'success')
+      } catch (e) {
+        safeLog(e.message || String(e), 'error')
+      }
+    }
+
+    async function estimateGasFee() {
+      estimateGasButton.disabled = true
+      gasEstimateResult.textContent = 'Estimating...'
+      gasEstimateResult.classList.remove('text-red-400')
+      try {
+        await ensureTargetChain()
+        const { contract, functionName, args, txOptions } = getPrepared()
+        await withEip1559Overrides(txOptions)
+        let total = 0n
+        const fee = await provider.getFeeData()
+        const maxFee = fee.maxFeePerGas || fee.gasPrice || 0n
+        // ERC20 approve (if needed)
+        if (paymentMethodSelect.value === 'erc20') {
+          const token = tokenAddressInput.value.trim()
+          const amount = tokenAmountInput.value.trim()
+          const spender = (customSpenderInput.value.trim() || contractAddressInput.value.trim())
+          if (!isAddress(token) || !isAddress(spender) || !amount) throw new Error('Invalid ERC20 details for estimation')
+          const erc20 = new ethers.Contract(token, ERC20_ABI, signer)
+          const decimals = await erc20.decimals()
+          const want = ethers.parseUnits(amount, decimals)
+          const current = await erc20.allowance(userAddress, spender)
+          if (current < want) {
+            const approveGas = await erc20.approve.estimateGas(spender, want)
+            const approveFee = approveGas * maxFee
+            total += approveFee
+          }
+        }
+        // Main tx gas
+        const gas = await contract[functionName].estimateGas(...args, txOptions)
+        const mainFee = gas * (fee.maxFeePerGas || fee.gasPrice || 0n)
+        total += mainFee
+        gasEstimateResult.textContent = `~${ethers.formatEther(total)} ETH`
+        safeLog(`Gas estimation OK. Total estimated: ~${ethers.formatEther(total)} ETH`, 'success')
+      } catch (e) {
+        gasEstimateResult.textContent = 'Estimation Failed'
+        gasEstimateResult.classList.add('text-red-400')
+        safeLog(e.message || String(e), 'error')
+      } finally {
+        estimateGasButton.disabled = false
+      }
+    }
+
+    async function handleSendTransaction() {
+      sendTxButton.disabled = true
+      sendTxButton.textContent = 'Processing...'
+      try {
+        await ensureTargetChain()
+        if (paymentMethodSelect.value === 'native') {
+          await sendNativeTransaction()
+        } else {
+          await sendErc20Transaction()
+        }
+      } finally {
+        updateSendButtonText()
+        sendTxButton.disabled = false
+      }
+    }
+
+    async function sendNativeTransaction() {
+      safeLog('Preparing native coin transaction...')
+      const { contract, functionName, args, txOptions } = getPrepared()
+      await withEip1559Overrides(txOptions)
+      try {
+        // Simulate first
+        await contract[functionName].staticCall(...args, txOptions)
+        // Gas limit buffer
+        const gas = await contract[functionName].estimateGas(...args, txOptions)
+        txOptions.gasLimit = (gas * 110n) / 100n
+        const tx = await contract[functionName](...args, txOptions)
+        const explorer = getExplorerUrl(network)
+        logLink(`Tx sent: ${tx.hash}`, ex.tx(explorer, tx.hash))
+        const rcpt = await tx.wait()
+        safeLog(`Confirmed in block ${rcpt.blockNumber}`, 'success')
+      } catch (err) {
+        safeLog(err.shortMessage || err.reason || err.message || String(err), 'error')
+      }
+    }
+
+    async function sendErc20Transaction() {
+      safeLog('Preparing ERC20 approval + mint...')
+      const tokenAddr = tokenAddressInput.value.trim()
+      const tokenAmt = tokenAmountInput.value.trim()
+      const spenderAddr = (customSpenderInput.value.trim() || contractAddressInput.value.trim())
+      if (!isAddress(tokenAddr) || !isAddress(spenderAddr) || !tokenAmt) return safeLog('Invalid Token Address, Spender, or Amount.', 'error')
+
+      const erc20 = new ethers.Contract(tokenAddr, ERC20_ABI, signer)
+      const explorer = getExplorerUrl(network)
+
+      try {
+        const decimals = await erc20.decimals()
+        const want = ethers.parseUnits(tokenAmt, decimals)
+        const current = await erc20.allowance(userAddress, spenderAddr)
+        if (current < want) {
+          safeLog(`Allowance insufficient. Approving ${tokenAmt}...`)
+          const fee = await provider.getFeeData()
+          const approveOverrides = {}
+          if (fee.maxFeePerGas && fee.maxPriorityFeePerGas) {
+            approveOverrides.maxFeePerGas = fee.maxFeePerGas
+            approveOverrides.maxPriorityFeePerGas = fee.maxPriorityFeePerGas
+          }
+          const gas = await erc20.approve.estimateGas(spenderAddr, want)
+          approveOverrides.gasLimit = (gas * 110n) / 100n
+          const aTx = await erc20.approve(spenderAddr, want, approveOverrides)
+          logLink(`Approve tx: ${aTx.hash}`, ex.tx(explorer, aTx.hash))
+          await aTx.wait()
+          safeLog('Approval confirmed!', 'success')
+        } else {
+          safeLog('Sufficient allowance already exists.')
         }
 
-        // --- Define Chains ---
-        const chains = [
-            { chainId: 1, name: 'Ethereum', currency: 'ETH', explorerUrl: 'https://etherscan.io', rpcUrl: 'https://cloudflare-eth.com' },
-            { chainId: 137, name: 'Polygon', currency: 'MATIC', explorerUrl: 'https://polygonscan.com', rpcUrl: 'https://polygon-rpc.com' },
-            { chainId: 42161, name: 'Arbitrum', currency: 'ETH', explorerUrl: 'https://arbiscan.io', rpcUrl: 'https://arb1.arbitrum.io/rpc' },
-            { chainId: 56, name: 'BNB Smart Chain', currency: 'BNB', explorerUrl: 'https://bscscan.com', rpcUrl: 'https://bsc-dataseed.binance.org/' },
-            { chainId: 43114, name: 'Avalanche', currency: 'AVAX', explorerUrl: 'https://snowtrace.io', rpcUrl: 'https://api.avax.network/ext/bc/C/rpc' },
-            { chainId: 10, name: 'OP Mainnet', currency: 'ETH', explorerUrl: 'https://optimistic.etherscan.io', rpcUrl: 'https://mainnet.optimism.io' },
-            { chainId: 8453, name: 'Base', currency: 'ETH', explorerUrl: 'https://basescan.org', rpcUrl: 'https://mainnet.base.org' },
-            { chainId: 250, name: 'Fantom Opera', currency: 'FTM', explorerUrl: 'https://ftmscan.com', rpcUrl: 'https://rpc.ftm.tools' },
-            { chainId: 25, name: 'Cronos', currency: 'CRO', explorerUrl: 'https://cronoscan.com', rpcUrl: 'https://evm.cronos.org' },
-            { chainId: 100, name: 'Gnosis', currency: 'xDAI', explorerUrl: 'https://gnosisscan.io', rpcUrl: 'https://rpc.gnosischain.com' },
-            { chainId: 1284, name: 'Moonbeam', currency: 'GLMR', explorerUrl: 'https://moonscan.io', rpcUrl: 'https://rpc.api.moonbeam.network' },
-            { chainId: 1285, name: 'Moonriver', currency: 'MOVR', explorerUrl: 'https://moonriver.moonscan.io', rpcUrl: 'https://rpc.api.moonriver.moonbeam.network' },
-            // Testnets
-            { chainId: 11155111, name: 'Sepolia', currency: 'SepoliaETH', explorerUrl: 'https://sepolia.etherscan.io', rpcUrl: 'https://rpc.sepolia.org' },
-            { chainId: 5, name: 'Goerli', currency: 'GoerliETH', explorerUrl: 'https://goerli.etherscan.io', rpcUrl: 'https://rpc.goerli.mudit.blog/' },
-            { chainId: 80001, name: 'Polygon Mumbai', currency: 'MATIC', explorerUrl: 'https://mumbai.polygonscan.com', rpcUrl: 'https://rpc-mumbai.maticvigil.com' },
-            { chainId: 421614, name: 'Arbitrum Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.arbiscan.io', rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc' },
-            { chainId: 97, name: 'BNB Smart Chain Testnet', currency: 'tBNB', explorerUrl: 'https://testnet.bscscan.com', rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545/' },
-            { chainId: 43113, name: 'Avalanche Fuji Testnet', currency: 'AVAX', explorerUrl: 'https://testnet.snowtrace.io', rpcUrl: 'https://api.avax-test.network/ext/bc/C/rpc' },
-            { chainId: 11155420, name: 'Optimism Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia-optimism.etherscan.io', rpcUrl: 'https://sepolia.optimism.io' },
-            { chainId: 84532, name: 'Base Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.basescan.org', rpcUrl: 'https://sepolia.base.org' }
-        ];
+        // Now call main function
+        const { contract, functionName, args, txOptions } = getPrepared()
+        await withEip1559Overrides(txOptions)
+        await contract[functionName].staticCall(...args, txOptions)
+        const gas = await contract[functionName].estimateGas(...args, txOptions)
+        txOptions.gasLimit = (gas * 110n) / 100n
+        const mTx = await contract[functionName](...args, txOptions)
+        logLink(`Mint/call tx: ${mTx.hash}`, ex.tx(explorer, mTx.hash))
+        await mTx.wait()
+        safeLog('Mint transaction confirmed!', 'success')
+      } catch (err) {
+        safeLog(err.shortMessage || err.reason || err.message || String(err), 'error')
+      }
+    }
 
-        const chainNameMap = chains.reduce((map, chain) => {
-            map[chain.chainId] = chain.name;
-            return map;
-        }, {});
+    // ==== Events ====
+    connectButton.addEventListener('click', () => web3Modal.open())
+    disconnectButton.addEventListener('click', () => web3Modal.disconnect())
+    estimateGasButton.addEventListener('click', () => { persistForm(); estimateGasFee() })
+    simulateButton.addEventListener('click', () => { persistForm(); simulateCall() })
+    sendTxButton.addEventListener('click', () => { persistForm(); handleSendTransaction() })
+    paymentMethodSelect.addEventListener('change', () => { handlePaymentMethodChange(); persistForm() })
+    clearLogsBtn.addEventListener('click', () => { logArea.innerHTML='' })
 
-        function initializeWeb3Modal() {
-            if (!projectId || projectId === 'YOUR_PROJECT_ID') {
-                log('Web3Modal Error: You must provide a valid projectId from https://dashboard.reown.com/', 'error');
-                return;
-            }
-            web3Modal = createWeb3Modal({
-                ethersConfig: defaultConfig({ metadata }),
-                chains: chains,
-                projectId
-            });
+    // Persist inputs as you type
+    for (const id of ['contractAddress','contractAbi','functionName','functionArgs','payableValue','tokenAddress','tokenAmount','customSpender']) {
+      const el = document.getElementById(id)
+      el.addEventListener('input', persistForm)
+    }
+    targetChainSelect.addEventListener('change', () => localStorage.setItem('dci.targetChain', String(targetChainSelect.value)))
 
-            // Subscribe to connection changes
-            web3Modal.subscribeProvider(handleProviderUpdate);
-        }
-
-        // --- Utility Functions ---
-        function log(message, type = 'info') {
-            const now = new Date().toLocaleTimeString();
-            let colorClass = 'text-gray-400';
-            if (type === 'error') colorClass = 'text-red-400';
-            if (type === 'success') colorClass = 'text-green-400';
-            logArea.innerHTML += `<p><span class="text-gray-500">${now}:</span> <span class="${colorClass}">${message}</span></p>`;
-            logArea.scrollTop = logArea.scrollHeight;
-        }
-
-        function getExplorerUrl(net) {
-            if (!net) return '';
-            const chain = chains.find(c => c.chainId === net.chainId);
-            return chain ? chain.explorerUrl : 'https://etherscan.io';
-        }
-
-        // --- Core Functions ---
-        async function handleProviderUpdate({ provider: newProvider, providerType, address, chainId, isConnected }) {
-            if (isConnected && address && chainId) {
-                userAddress = address;
-                const modalProvider = new ethers.providers.Web3Provider(newProvider);
-                signer = await modalProvider.getSigner();
-                network = await modalProvider.getNetwork();
-                const networkName = chainNameMap[chainId] || `Unknown (ID: ${chainId})`;
-                updateConnectionStatus(true, address, networkName);
-                log(`Wallet connected on network: ${networkName}.`, 'success');
-            } else {
-                disconnectWallet();
-            }
-        }
-
-        function disconnectWallet() {
-            provider = null;
-            signer = null;
-            userAddress = null;
-            network = null;
-            updateConnectionStatus(false);
-            log('Wallet disconnected.', 'info');
-        }
-        
-        function updateConnectionStatus(isConnected, address = '', networkName = '') {
-            statusDot.classList.toggle('bg-red-500', !isConnected);
-            statusDot.classList.toggle('bg-green-500', isConnected);
-            statusDot.classList.toggle('status-dot-pulse', isConnected);
-            statusText.textContent = isConnected ? 'Connected' : 'Not Connected';
-            walletInfoDiv.classList.toggle('hidden', !isConnected);
-            connectButton.classList.toggle('hidden', isConnected);
-
-            if(isConnected) {
-                walletAddressSpan.textContent = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-                networkNameSpan.textContent = networkName;
-            }
-            
-            sendTxButton.disabled = !isConnected;
-            estimateGasButton.disabled = !isConnected;
-        }
-
-        function handlePaymentMethodChange() {
-            const isNative = paymentMethodSelect.value === 'native';
-            nativePaymentFields.classList.toggle('hidden', !isNative);
-            erc20PaymentFields.classList.toggle('hidden', isNative);
-            updateSendButtonText();
-        }
-
-        function updateSendButtonText() {
-            const isNative = paymentMethodSelect.value === 'native';
-            sendTxButton.textContent = isNative ? 'Send Transaction' : 'Approve & Mint';
-        }
-
-        async function handleSendTransaction() {
-            sendTxButton.disabled = true;
-            sendTxButton.textContent = 'Processing...';
-            if (paymentMethodSelect.value === 'native') {
-                await sendNativeTransaction();
-            } else {
-                await sendErc20Transaction();
-            }
-            resetSendButton();
-        }
-
-        async function sendNativeTransaction() {
-            log('Preparing native coin transaction...');
-            const { contract, args, txOptions } = prepareTransactionBase();
-            if (!contract) {
-                resetSendButton();
-                return;
-            }
-            try {
-                log('Sending transaction to public mempool...');
-                const tx = await contract[functionNameInput.value](...args, txOptions);
-                const explorerUrl = getExplorerUrl(network);
-                log(`Transaction sent! Hash: <a href="${explorerUrl}/tx/${tx.hash}" target="_blank" class="text-pink-400 hover:underline">${tx.hash}</a>`, 'success');
-                await tx.wait();
-                log('Transaction confirmed!', 'success');
-            } catch (error) {
-                let detailedError = error.reason || error.message;
-                if (detailedError.includes('Internal JSON-RPC error')) {
-                    detailedError += `<br><br><strong class="text-yellow-400">Debugging Tips:</strong><br>
-                    1. Check if all arguments are correct (type, order).<br>
-                    2. Check if the 'Value to Send' is correct for this function.<br>
-                    3. Ensure the contract's conditions are met (e.g., sale is active).`;
-                }
-                log(`Error: ${detailedError}`, 'error');
-            }
-        }
-        
-        async function sendErc20Transaction() {
-            log('Preparing ERC20 token transaction...');
-            const tokenAddress = tokenAddressInput.value;
-            const tokenAmount = tokenAmountInput.value;
-            const spenderAddress = contractAddressInput.value;
-            const explorerUrl = getExplorerUrl(network);
-
-            if (!ethers.utils.isAddress(tokenAddress) || !ethers.utils.isAddress(spenderAddress) || !tokenAmount) {
-                resetSendButton();
-                return log('Invalid Token Address, Spender Address, or Amount.', 'error');
-            }
-
-            const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
-            
-            try {
-                const decimals = await tokenContract.decimals();
-                const amountToApprove = ethers.utils.parseUnits(tokenAmount, decimals);
-
-                log(`Checking allowance for ${spenderAddress}...`);
-                const currentAllowance = await tokenContract.allowance(userAddress, spenderAddress);
-                
-                if (currentAllowance.lt(amountToApprove)) {
-                    log('Allowance is insufficient. Sending approval transaction...');
-                    const approveTx = await tokenContract.approve(spenderAddress, amountToApprove);
-                    log(`Approval transaction sent! Hash: <a href="${explorerUrl}/tx/${approveTx.hash}" target="_blank" class="text-pink-400 hover:underline">${approveTx.hash}</a>`, 'success');
-                    await approveTx.wait();
-                    log('Approval confirmed!', 'success');
-                } else {
-                    log('Sufficient allowance already exists.', 'info');
-                }
-
-                log('Proceeding with mint transaction...');
-                const { contract, args, txOptions } = prepareTransactionBase();
-                 if (!contract) {
-                     resetSendButton();
-                     return;
-                 }
-                
-                const mintTx = await contract[functionNameInput.value](...args, txOptions);
-                log(`Mint transaction sent! Hash: <a href="${explorerUrl}/tx/${mintTx.hash}" target="_blank" class="text-pink-400 hover:underline">${mintTx.hash}</a>`, 'success');
-                await mintTx.wait();
-                log('Mint transaction confirmed!', 'success');
-
-            } catch (error) {
-                 let detailedError = error.reason || error.message;
-                 if (detailedError.includes('Internal JSON-RPC error')) {
-                    detailedError += `<br><br><strong class="text-yellow-400">Debugging Tips:</strong><br>
-                    1. Check if all arguments are correct (type, order).<br>
-                    2. Ensure you have enough ERC20 tokens and have approved the correct amount.<br>
-                    3. Ensure the contract's conditions are met (e.g., sale is active).`;
-                }
-                 log(`Error: ${detailedError}`, 'error');
-            }
-        }
-
-        function prepareTransactionBase() {
-            const contractAddress = contractAddressInput.value;
-            const abiString = contractAbiInput.value;
-            const functionName = functionNameInput.value;
-            const argsString = functionArgsInput.value;
-            
-            if (!ethers.utils.isAddress(contractAddress) || !functionName) {
-                log('Invalid Contract Address or Function Name.', 'error');
-                return {};
-            }
-            let abi;
-            try {
-                abi = JSON.parse(abiString);
-            } catch (e) {
-                log('Invalid ABI. Must be valid JSON.', 'error');
-                return {};
-            }
-
-            const contract = new ethers.Contract(contractAddress, abi, signer);
-            const args = argsString ? argsString.split(',').map(arg => arg.trim()) : [];
-            const txOptions = {};
-            if (paymentMethodSelect.value === 'native' && payableValueInput.value) {
-                txOptions.value = ethers.utils.parseEther(payableValueInput.value);
-            }
-
-            return { contract, args, txOptions };
-        }
-
-        async function estimateGasFee() {
-            estimateGasButton.disabled = true;
-            gasEstimateResult.textContent = 'Estimating...';
-            gasEstimateResult.classList.remove('text-red-400');
-
-            try {
-                const { contract, args, txOptions } = prepareTransactionBase();
-                if (!contract) {
-                    throw new Error("Failed to prepare transaction. Check inputs.");
-                }
-                const gasPrice = await signer.getGasPrice();
-                let totalFee = ethers.BigNumber.from(0);
-                let feeBreakdown = [];
-
-                // Estimate ERC20 approve transaction if needed
-                if (paymentMethodSelect.value === 'erc20') {
-                    const tokenAddress = tokenAddressInput.value;
-                    const tokenAmount = tokenAmountInput.value;
-                    const spenderAddress = contractAddressInput.value;
-
-                    if (!ethers.utils.isAddress(tokenAddress) || !ethers.utils.isAddress(spenderAddress) || !tokenAmount) {
-                       throw new Error('Invalid ERC20 details for estimation.');
-                    }
-                    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
-                    const decimals = await tokenContract.decimals();
-                    const amountToApprove = ethers.utils.parseUnits(tokenAmount, decimals);
-                    const currentAllowance = await tokenContract.allowance(userAddress, spenderAddress);
-
-                    if (currentAllowance.lt(amountToApprove)) {
-                        const approveGas = await tokenContract.estimateGas.approve(spenderAddress, amountToApprove);
-                        const approveFee = approveGas.mul(gasPrice);
-                        totalFee = totalFee.add(approveFee);
-                        feeBreakdown.push(`Approve: ~${ethers.utils.formatEther(approveFee).substring(0, 8)}`);
-                    }
-                }
-
-                // Estimate main transaction
-                const mainTxGas = await contract.estimateGas[functionNameInput.value](...args, txOptions);
-                const mainTxFee = mainTxGas.mul(gasPrice);
-                totalFee = totalFee.add(mainTxFee);
-                feeBreakdown.push(`Mint/Call: ~${ethers.utils.formatEther(mainTxFee).substring(0, 8)}`);
-
-                gasEstimateResult.textContent = `${feeBreakdown.join(' + ')} ETH`;
-                log(`Gas estimation successful. Total estimated cost: ~${ethers.utils.formatEther(totalFee).substring(0, 8)} ETH`, 'success');
-
-            } catch (error) {
-                const errorMessage = error.reason || error.message;
-                gasEstimateResult.textContent = 'Estimation Failed';
-                gasEstimateResult.classList.add('text-red-400');
-                log(`Gas estimation failed: ${errorMessage}`, 'error');
-            } finally {
-                estimateGasButton.disabled = false;
-            }
-        }
-
-        function resetSendButton() {
-            sendTxButton.disabled = false;
-            updateSendButtonText();
-        }
-        
-        // --- Event Listeners ---
-        connectButton.addEventListener('click', () => web3Modal.open());
-        disconnectButton.addEventListener('click', () => web3Modal.disconnect());
-        sendTxButton.addEventListener('click', handleSendTransaction);
-        estimateGasButton.addEventListener('click', estimateGasFee);
-        paymentMethodSelect.addEventListener('change', handlePaymentMethodChange);
-
-        // --- Initial Setup on Page Load ---
-        initializeWeb3Modal();
-        updateSendButtonText();
-        sendTxButton.disabled = true;
-        estimateGasButton.disabled = true;
-    </script>
+    // ==== Init ====
+    initTargetChainOptions()
+    initializeWeb3Modal()
+    loadPersisted()
+    handlePaymentMethodChange()
+  </script>
 </body>
 </html>
