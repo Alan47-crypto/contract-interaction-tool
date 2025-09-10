@@ -335,11 +335,18 @@
     // ==== Chain switch ====
     async function ensureTargetChain() {
       const wantId = Number(targetChainSelect.value)
-      if (!window.ethereum) return
-      const current = await signer.getChainId()
-      if (Number(current) === wantId) return
+      if (!provider || !signer) throw new Error('Connect wallet first')
+      // ethers v6: signer has no getChainId(); use provider.getNetwork()
+      const { chainId: currentId } = await provider.getNetwork()
+      if (Number(currentId) === wantId) return
       try {
-        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + wantId.toString(16) }] })
+        // Use the connected provider (not window.ethereum) so we switch the right wallet
+        await provider.send('wallet_switchEthereumChain', [{ chainId: '0x' + wantId.toString(16) }])
+        network = await provider.getNetwork()
+      } catch (e) {
+        throw new Error('User rejected chain switch or chain not added in wallet.')
+      }
+    }] })
         network = await provider.getNetwork()
       } catch (e) {
         throw new Error('User rejected chain switch or chain not added in wallet.')
