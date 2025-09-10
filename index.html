@@ -237,10 +237,26 @@
     }
 
     function initializeWeb3Modal() {
-      if (!projectId) {
-        safeLog('Missing Web3Modal projectId. Get one at reown.com', 'error')
-        return
+      try {
+        if (!projectId) {
+          safeLog('Missing Web3Modal projectId. Get one at reown.com', 'error')
+          return
+        }
+        const ethersCfg = defaultConfig({ metadata, enableEIP6963: true, ethersVersion: '6' })
+        web3Modal = createWeb3Modal({ ethersConfig: ethersCfg, chains: CHAINS, projectId })
+        if (!web3Modal || typeof web3Modal.open !== 'function') {
+          safeLog('Web3Modal failed to initialize', 'error')
+          return
+        }
+        // expose for debugging
+        window.w3m = web3Modal
+        web3Modal.subscribeProvider(handleProviderUpdate)
+        safeLog('Web3Modal initialized', 'success')
+      } catch (err) {
+        console.error('initializeWeb3Modal error:', err)
+        safeLog(err.message || String(err), 'error')
       }
+    }
       web3Modal = createWeb3Modal({
         ethersConfig: defaultConfig({ metadata, enableEIP6963: true }),
         chains: CHAINS,
@@ -553,7 +569,20 @@
     }
 
     // ==== Events ====
-    connectButton.addEventListener('click', () => web3Modal.open())
+    connectButton.addEventListener('click', async () => {
+      try {
+        if (!web3Modal || typeof web3Modal.open !== 'function') {
+          initializeWeb3Modal()
+        }
+        if (!web3Modal || typeof web3Modal.open !== 'function') {
+          return safeLog('Web3Modal not ready. Check console/network.', 'error')
+        }
+        await web3Modal.open()
+      } catch (e) {
+        console.error('open error:', e)
+        safeLog(e.message || String(e), 'error')
+      }
+    }) => web3Modal.open())
     disconnectButton.addEventListener('click', () => web3Modal.disconnect())
     estimateGasButton.addEventListener('click', () => { persistForm(); estimateGasFee() })
     simulateButton.addEventListener('click', () => { persistForm(); simulateCall() })
@@ -573,6 +602,9 @@
     initializeWeb3Modal()
     loadPersisted()
     handlePaymentMethodChange()
+  // Global error guards
+    window.addEventListener('error', (e) => safeLog(`JS error: ${e.message}`, 'error'))
+    window.addEventListener('unhandledrejection', (e) => safeLog(`Promise rejection: ${e.reason?.message || e.reason}`, 'error'))
   </script>
 </body>
 </html>
