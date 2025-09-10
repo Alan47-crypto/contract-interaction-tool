@@ -187,28 +187,28 @@
 
     // ==== Chains ====
     const CHAINS = [
-      { chainId: 1, name: 'Ethereum', currency: 'ETH', explorerUrl: 'https://etherscan.io' },
-      { chainId: 10, name: 'OP Mainnet', currency: 'ETH', explorerUrl: 'https://optimistic.etherscan.io' },
-      { chainId: 8453, name: 'Base', currency: 'ETH', explorerUrl: 'https://basescan.org' },
-      { chainId: 42161, name: 'Arbitrum One', currency: 'ETH', explorerUrl: 'https://arbiscan.io' },
-      { chainId: 7777777, name: 'Zora', currency: 'ETH', explorerUrl: 'https://zorascan.xyz' },
-      { chainId: 59144, name: 'Linea', currency: 'ETH', explorerUrl: 'https://lineascan.build' },
-      { chainId: 324, name: 'zkSync Era', currency: 'ETH', explorerUrl: 'https://explorer.zksync.io' },
-      { chainId: 56, name: 'BNB Chain', currency: 'BNB', explorerUrl: 'https://bscscan.com' },
-      { chainId: 137, name: 'Polygon', currency: 'MATIC', explorerUrl: 'https://polygonscan.com' },
-      { chainId: 43114, name: 'Avalanche', currency: 'AVAX', explorerUrl: 'https://snowtrace.io' },
-      { chainId: 250, name: 'Fantom', currency: 'FTM', explorerUrl: 'https://ftmscan.com' },
-      { chainId: 25, name: 'Cronos', currency: 'CRO', explorerUrl: 'https://cronoscan.com' },
-      { chainId: 100, name: 'Gnosis', currency: 'xDAI', explorerUrl: 'https://gnosisscan.io' },
-      { chainId: 1284, name: 'Moonbeam', currency: 'GLMR', explorerUrl: 'https://moonscan.io' },
-      { chainId: 1285, name: 'Moonriver', currency: 'MOVR', explorerUrl: 'https://moonriver.moonscan.io' },
+      { chainId: 1, name: 'Ethereum', currency: 'ETH', explorerUrl: 'https://etherscan.io', rpcUrls: ['https://cloudflare-eth.com'] },
+      { chainId: 10, name: 'OP Mainnet', currency: 'ETH', explorerUrl: 'https://optimistic.etherscan.io', rpcUrls: ['https://mainnet.optimism.io'] },
+      { chainId: 8453, name: 'Base', currency: 'ETH', explorerUrl: 'https://basescan.org', rpcUrls: ['https://mainnet.base.org'] },
+      { chainId: 42161, name: 'Arbitrum One', currency: 'ETH', explorerUrl: 'https://arbiscan.io', rpcUrls: ['https://arb1.arbitrum.io/rpc'] },
+      { chainId: 7777777, name: 'Zora', currency: 'ETH', explorerUrl: 'https://zorascan.xyz', rpcUrls: ['https://rpc.zora.energy'] },
+      { chainId: 59144, name: 'Linea', currency: 'ETH', explorerUrl: 'https://lineascan.build', rpcUrls: ['https://rpc.linea.build'] },
+      { chainId: 324, name: 'zkSync Era', currency: 'ETH', explorerUrl: 'https://explorer.zksync.io', rpcUrls: ['https://mainnet.era.zksync.io'] },
+      { chainId: 56, name: 'BNB Chain', currency: 'BNB', explorerUrl: 'https://bscscan.com', rpcUrls: ['https://bsc-dataseed.binance.org'] },
+      { chainId: 137, name: 'Polygon', currency: 'MATIC', explorerUrl: 'https://polygonscan.com', rpcUrls: ['https://polygon-rpc.com'] },
+      { chainId: 43114, name: 'Avalanche', currency: 'AVAX', explorerUrl: 'https://snowtrace.io', rpcUrls: ['https://api.avax.network/ext/bc/C/rpc'] },
+      { chainId: 250, name: 'Fantom', currency: 'FTM', explorerUrl: 'https://ftmscan.com', rpcUrls: ['https://rpc.ftm.tools'] },
+      { chainId: 25, name: 'Cronos', currency: 'CRO', explorerUrl: 'https://cronoscan.com', rpcUrls: ['https://evm.cronos.org'] },
+      { chainId: 100, name: 'Gnosis', currency: 'xDAI', explorerUrl: 'https://gnosisscan.io', rpcUrls: ['https://rpc.gnosischain.com'] },
+      { chainId: 1284, name: 'Moonbeam', currency: 'GLMR', explorerUrl: 'https://moonscan.io', rpcUrls: ['https://rpc.api.moonbeam.network'] },
+      { chainId: 1285, name: 'Moonriver', currency: 'MOVR', explorerUrl: 'https://moonriver.moonscan.io', rpcUrls: ['https://rpc.api.moonriver.moonbeam.network'] },
       // Testnets
-      { chainId: 11155111, name: 'Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.etherscan.io' },
-      { chainId: 84532, name: 'Base Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.basescan.org' },
-      { chainId: 421614, name: 'Arbitrum Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.arbiscan.io' },
-      { chainId: 11155420, name: 'OP Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia-optimism.etherscan.io' }
+      { chainId: 11155111, name: 'Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.etherscan.io', rpcUrls: ['https://rpc.sepolia.org'] },
+      { chainId: 84532, name: 'Base Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.basescan.org', rpcUrls: ['https://sepolia.base.org'] },
+      { chainId: 421614, name: 'Arbitrum Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia.arbiscan.io', rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'] },
+      { chainId: 11155420, name: 'OP Sepolia', currency: 'ETH', explorerUrl: 'https://sepolia-optimism.etherscan.io', rpcUrls: ['https://sepolia.optimism.io'] }
     ]
-    const CHAIN_MAP = new Map(CHAINS.map(c => [c.chainId, c]))
+    const CHAIN_MAP = new Map(CHAINS.map(c => [c.chainId, c])) = new Map(CHAINS.map(c => [c.chainId, c]))
 
     // Minimal ERC20 ABI
     const ERC20_ABI = [
@@ -323,6 +323,44 @@
       if (!provider || !signer) throw new Error('Connect wallet first')
       const wantId = Number(targetChainSelect.value)
       const { chainId: currentId } = await provider.getNetwork()
+      if (Number(currentId) === wantId) return
+      const hex = '0x' + wantId.toString(16)
+      try {
+        if (injectedProvider && typeof injectedProvider.request === 'function') {
+          await injectedProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hex }] })
+        } else {
+          await provider.send('wallet_switchEthereumChain', [{ chainId: hex }])
+        }
+      } catch (e) {
+        // 4902: Unrecognized chain → try add
+        if (e && (e.code === 4902 || e?.message?.includes('Unrecognized chain'))) {
+          const c = CHAIN_MAP.get(wantId)
+          if (!c) throw new Error('Unknown chain details for add')
+          const addParams = {
+            chainId: hex,
+            chainName: c.name,
+            nativeCurrency: { name: c.currency, symbol: c.currency, decimals: 18 },
+            rpcUrls: c.rpcUrls,
+            blockExplorerUrls: [c.explorerUrl]
+          }
+          try {
+            if (injectedProvider?.request) {
+              await injectedProvider.request({ method: 'wallet_addEthereumChain', params: [addParams] })
+            } else {
+              await provider.send('wallet_addEthereumChain', [addParams])
+            }
+          } catch (addErr) {
+            safeLog(`Add chain failed: ${addErr?.message || addErr}`, 'error')
+            throw addErr
+          }
+        } else {
+          // log raw provider error to help avoid opaque "could not coalesce error"
+          safeLog(`Switch chain error (raw): ${JSON.stringify(e, Object.getOwnPropertyNames(e))}`,'error')
+          throw e
+        }
+      }
+      network = await provider.getNetwork()
+    } = await provider.getNetwork()
       if (Number(currentId) === wantId) return
       try {
         await provider.send('wallet_switchEthereumChain', [{ chainId: chainHex(wantId) }])
